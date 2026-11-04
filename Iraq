@@ -1,0 +1,1019 @@
+--[=[
+    =================================================================
+      YouTube ByTheWay V1  |  Fixed Edition (every feature is real)
+      Coded by: ByTheWay (zuzu_iq964 & ByTheWayGilber)
+      YouTube: https://youtube.com/@bythewayiq
+      Discord: https://discord.gg/eT7D5tHPkn
+      Hotkeys: [INSERT] Clean  |  [RIGHT SHIFT] Toggle Visibility
+    =================================================================
+]=]
+
+if getgenv and getgenv().ModMenu_Cleanup then pcall(getgenv().ModMenu_Cleanup) end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+local Lighting = game:GetService("Lighting")
+local SoundService = game:GetService("SoundService")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Stats = game:GetService("Stats")
+local LP = Players.LocalPlayer
+local mouse = LP:GetMouse()
+
+-- ===================== SETTINGS (unchanged) =====================
+local CONFIG = {
+	YouTube = "YouTube: @bythewayiq",
+	Discord = "https://discord.gg/eT7D5tHPkn",
+	FreeKey = "BTW_FREE_2026",
+	PaidKey = "BTW_VIP_2026_PRO",
+	Developers = { ["zuzu_iq964"] = true, ["ByTheWayGilber"] = true },
+	AllowedSubscribers = { ["PlayerUsernameHere"] = true }
+}
+-- ================================================================
+
+-- Key duration / limits per key type
+local Rules = {
+	Free = { dur = 24 * 3600,      maxSpeed = 100, maxFly = 100, maxJump = 150 },
+	Paid = { dur = 30 * 24 * 3600, maxSpeed = 500, maxFly = 300, maxJump = 500 },
+}
+local SAVE_FILE = "BTW_V1_Session.json"
+
+local currentLang = "AR"
+local function L(ar, en) return currentLang == "AR" and ar or en end
+
+local alive = true
+local conns, guis = {}, {}
+local S = {}                       -- feature state flags
+local session = { type = nil, expires = 0 }
+local menuGui, menuFrame, mconns, dyn = nil, nil, {}, {}
+local currentPage = "PLAYER"
+local fpsCount, fpsShown = 0, 0
+local cleanup, buildMenu, showKeySystem, rebuildMenu
+
+local function track(c) conns[#conns + 1] = c return c end
+local function mtrack(c) mconns[#mconns + 1] = c return c end
+local function notify(text)
+	pcall(function() StarterGui:SetCore("SendNotification", {Title = "ByTheWay V1", Text = text, Duration = 3}) end)
+end
+local function getHum() local c = LP.Character return c and c:FindFirstChildOfClass("Humanoid") end
+local function getHRP() local c = LP.Character return c and c:FindFirstChild("HumanoidRootPart") end
+local function cam() return workspace.CurrentCamera end
+local function copy(text)
+	if setclipboard then pcall(setclipboard, text) notify(L("تم النسخ ✅", "Copied ✅"))
+	else notify(L("المنفذ لا يدعم النسخ", "Executor has no clipboard")) end
+end
+
+local function new(class, props, parent)
+	local o = Instance.new(class)
+	for k, v in pairs(props or {}) do o[k] = v end
+	if parent then o.Parent = parent end
+	return o
+end
+local function round(o, r) return new("UICorner", {CornerRadius = UDim.new(0, r or 6)}, o) end
+
+local function mkGui(name)
+	local g = Instance.new("ScreenGui")
+	g.Name = name g.ResetOnSpawn = false g.IgnoreGuiInset = true g.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	pcall(function()
+		if syn and syn.protect_gui then syn.protect_gui(g) g.Parent = game:GetService("CoreGui")
+		elseif gethui then g.Parent = gethui()
+		else g.Parent = game:GetService("CoreGui") end
+	end)
+	if not g.Parent then g.Parent = LP:WaitForChild("PlayerGui") end
+	guis[#guis + 1] = g
+	return g
+end
+
+local function makeDraggable(handle, target, bucket)
+	local dragging, dragStart, startPos
+	bucket(handle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true dragStart = input.Position startPos = target.Position
+			input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+		end
+	end))
+	bucket(UIS.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local d = input.Position - dragStart
+			target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+		end
+	end))
+end
+
+-- ===================== KEY / SESSION SYSTEM =====================
+local function isDev() return CONFIG.Developers[LP.Name] == true end
+local function isPaid() return session.type == "Paid" or isDev() or CONFIG.AllowedSubscribers[LP.Name] == true end
+local function limit(kind) return (isPaid() and Rules.Paid or Rules.Free)[kind] end
+local function clampTo(v, kind)
+	local m = limit(kind)
+	if v > m then notify(L("الحد الأقصى لنسختك: ", "Your max: ") .. m) return m end
+	return v
+end
+local function sessionValid() return session.type ~= nil and session.expires > os.time() end
+
+local function fmtTime(sec)
+	if sec <= 0 then return "0s" end
+	local d = math.floor(sec / 86400) local h = math.floor(sec % 86400 / 3600)
+	local m = math.floor(sec % 3600 / 60) local s = math.floor(sec % 60)
+	if d > 0 then return string.format("%dd %02dh %02dm %02ds", d, h, m, s) end
+	return string.format("%02dh %02dm %02ds", h, m, s)
+end
+
+local function saveSession()
+	if writefile then
+		pcall(writefile, SAVE_FILE, HttpService:JSONEncode({type = session.type, expires = session.expires, user = LP.Name}))
+	end
+end
+local function loadSession()
+	if readfile and isfile then
+		local ok, data = pcall(function()
+			if isfile(SAVE_FILE) then return HttpService:JSONDecode(readfile(SAVE_FILE)) end
+		end)
+		if ok and type(data) == "table" and data.user == LP.Name and (data.type == "Free" or data.type == "Paid") then
+			session.type = data.type session.expires = tonumber(data.expires) or 0
+		end
+	end
+end
+
+-- Verify OR renew. Returns ok, reason
+local function applyKey(entered, wantType)
+	entered = tostring(entered or ""):gsub("%s", "")
+	local expected = (wantType == "Paid") and CONFIG.PaidKey or CONFIG.FreeKey
+	if entered ~= expected then return false, "invalid" end
+	local now = os.time()
+	local active = sessionValid()
+	if wantType == "Free" and active and session.type == "Paid" then return false, "paid_active" end
+	local base = now
+	if wantType == "Paid" and active and session.type == "Paid" then base = session.expires end -- paid time stacks
+	session.type = wantType
+	session.expires = base + Rules[wantType].dur
+	saveSession()
+	return true
+end
+
+-- ===================== FEATURE ENGINE (real) =====================
+local flyBV, flyBG, flyActive = nil, nil, false
+local function killFly()
+	if flyBV then flyBV:Destroy() flyBV = nil end
+	if flyBG then flyBG:Destroy() flyBG = nil end
+	local hum = getHum()
+	if flyActive and hum then hum.PlatformStand = false end
+	flyActive = false
+end
+
+local origLighting = {
+	Brightness = Lighting.Brightness, ClockTime = Lighting.ClockTime, FogEnd = Lighting.FogEnd,
+	FogStart = Lighting.FogStart, GlobalShadows = Lighting.GlobalShadows,
+	Ambient = Lighting.Ambient, OutdoorAmbient = Lighting.OutdoorAmbient,
+}
+local function restoreLighting()
+	for k, v in pairs(origLighting) do pcall(function() Lighting[k] = v end) end
+end
+local function removeFx(name) local e = Lighting:FindFirstChild(name) if e then e:Destroy() end end
+
+local espObjs, lines = {}, {}
+local function clearESP(p)
+	local o = espObjs[p]
+	if o then pcall(function() o.hl:Destroy() o.bb:Destroy() end) espObjs[p] = nil end
+end
+local function clearAllESP() for p in pairs(espObjs) do clearESP(p) end end
+local function clearLines()
+	for _, ln in pairs(lines) do pcall(function() ln:Remove() end) end
+	lines = {}
+end
+
+local sound
+local function stopMusic() if sound then sound:Stop() sound:Destroy() sound = nil end end
+local function playMusic(id)
+	stopMusic()
+	sound = new("Sound", {Name = "BTW_Music", SoundId = "rbxassetid://" .. tostring(id), Looped = true,
+		Volume = S.MusicVol or 1, PlaybackSpeed = S.MusicSpeed or 1}, SoundService)
+	sound:Play()
+end
+
+local coreTypes = {
+	Chat = Enum.CoreGuiType.Chat, PlayerList = Enum.CoreGuiType.PlayerList,
+	Backpack = Enum.CoreGuiType.Backpack, Health = Enum.CoreGuiType.Health,
+}
+local function setCore(t, visible) pcall(function() StarterGui:SetCoreGuiEnabled(t, visible) end) end
+
+local function resetFeatures()
+	S = { ESPColor = Color3.fromRGB(255, 0, 0), FlySpeed = 50 }
+	killFly() clearAllESP() clearLines()
+	local hum = getHum()
+	if hum then hum.WalkSpeed = 16 hum.JumpPower = 50 hum.PlatformStand = false end
+	workspace.Gravity = 196.2
+	if cam() then cam().FieldOfView = 70 end
+	restoreLighting()
+	removeFx("BTW_CC") removeFx("BTW_Bloom") removeFx("BTW_Rays")
+	stopMusic()
+	for _, t in pairs(coreTypes) do setCore(t, true) end
+	setCore(Enum.CoreGuiType.All, true)
+end
+resetFeatures()
+
+-- persistent engine loops (they only read the S flags)
+track(RunService.Heartbeat:Connect(function()
+	local hum, hrp = getHum(), getHRP()
+	if hum then
+		if S.Speed then hum.WalkSpeed = S.Speed end
+		if S.Jump then hum.UseJumpPower = true hum.JumpPower = S.Jump end
+	end
+	if S.Gravity then workspace.Gravity = S.Gravity end
+	if S.FOV and cam() then cam().FieldOfView = S.FOV end
+	if S.Spin and hrp then hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(S.SpinSpeed or 20), 0) end
+	if S.Rainbow and LP.Character then
+		local col = Color3.fromHSV((os.clock() % 3) / 3, 1, 1)
+		for _, p in ipairs(LP.Character:GetDescendants()) do
+			if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Color = col end
+		end
+	end
+	if S.HideNames then
+		for _, pl in ipairs(Players:GetPlayers()) do
+			local h = pl.Character and pl.Character:FindFirstChildOfClass("Humanoid")
+			if h then h.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
+		end
+	end
+end))
+
+track(RunService.Stepped:Connect(function()
+	if S.Noclip and LP.Character then
+		for _, p in ipairs(LP.Character:GetDescendants()) do
+			if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end
+		end
+	end
+end))
+
+track(UIS.JumpRequest:Connect(function()
+	if S.InfJump then local h = getHum() if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end end
+end))
+
+track(UIS.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if S.ClickTp and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+		local hrp = getHRP()
+		if hrp and mouse.Hit then hrp.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 4, 0)) end
+	end
+end))
+
+track(RunService.RenderStepped:Connect(function()
+	fpsCount = fpsCount + 1
+	-- Fly
+	if S.Fly then
+		local hrp, hum, c = getHRP(), getHum(), cam()
+		if hrp and hum and c then
+			flyActive = true
+			if not flyBV or flyBV.Parent ~= hrp then
+				if flyBV then flyBV:Destroy() end
+				flyBV = new("BodyVelocity", {MaxForce = Vector3.new(1e9, 1e9, 1e9), Velocity = Vector3.zero}, hrp)
+			end
+			if not flyBG or flyBG.Parent ~= hrp then
+				if flyBG then flyBG:Destroy() end
+				flyBG = new("BodyGyro", {MaxTorque = Vector3.new(1e9, 1e9, 1e9), P = 90000}, hrp)
+			end
+			hum.PlatformStand = true
+			local cf = c.CFrame
+			local md = hum.MoveDirection
+			local dir = Vector3.zero
+			if md.Magnitude > 0 then
+				local flat = Vector3.new(cf.LookVector.X, 0, cf.LookVector.Z)
+				local rflat = Vector3.new(cf.RightVector.X, 0, cf.RightVector.Z)
+				if flat.Magnitude > 0 and rflat.Magnitude > 0 then
+					dir = cf.LookVector * md:Dot(flat.Unit) + cf.RightVector * md:Dot(rflat.Unit)
+				end
+			end
+			local up = 0
+			if S.FlyUp or UIS:IsKeyDown(Enum.KeyCode.Space) or UIS:IsKeyDown(Enum.KeyCode.E) then up = up + 1 end
+			if S.FlyDown or UIS:IsKeyDown(Enum.KeyCode.Q) or UIS:IsKeyDown(Enum.KeyCode.LeftControl) then up = up - 1 end
+			flyBV.Velocity = (dir + Vector3.new(0, up, 0)) * S.FlySpeed
+			flyBG.CFrame = cf
+		end
+	elseif flyActive then
+		killFly()
+	end
+	-- Tracers
+	if S.Tracers and Drawing then
+		local c = cam()
+		local vp = c.ViewportSize
+		local col = S.ESPRainbow and Color3.fromHSV((os.clock() % 4) / 4, 1, 1) or S.ESPColor
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= LP then
+				local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+				local ln = lines[p]
+				if hrp then
+					if not ln then ln = Drawing.new("Line") ln.Thickness = 1.5 lines[p] = ln end
+					local pos, on = c:WorldToViewportPoint(hrp.Position)
+					ln.Visible = on ln.Color = col
+					ln.From = Vector2.new(vp.X / 2, vp.Y) ln.To = Vector2.new(pos.X, pos.Y)
+				elseif ln then ln.Visible = false end
+			end
+		end
+	elseif next(lines) then
+		clearLines()
+	end
+end))
+
+-- ESP (Highlight + Billboard) refresh loop
+task.spawn(function()
+	while alive do
+		task.wait(0.15)
+		if S.ESP then
+			local col = S.ESPRainbow and Color3.fromHSV((os.clock() % 4) / 4, 1, 1) or S.ESPColor
+			local myhrp = getHRP()
+			for _, p in ipairs(Players:GetPlayers()) do
+				if p ~= LP then
+					local ch = p.Character
+					local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+					local head = ch and ch:FindFirstChild("Head")
+					if hum and head and hum.Health > 0 then
+						local o = espObjs[p]
+						if not o or o.char ~= ch or not o.hl.Parent then
+							clearESP(p)
+							local hl = new("Highlight", {FillTransparency = 0.6, OutlineTransparency = 0,
+								DepthMode = Enum.HighlightDepthMode.AlwaysOnTop, Adornee = ch}, ch)
+							local bb = new("BillboardGui", {Size = UDim2.new(0, 170, 0, 36), StudsOffset = Vector3.new(0, 3, 0),
+								AlwaysOnTop = true, Adornee = head}, ch)
+							local lbl = new("TextLabel", {Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1,
+								Font = Enum.Font.GothamBold, TextSize = 13, TextStrokeTransparency = 0}, bb)
+							o = {hl = hl, bb = bb, lbl = lbl, char = ch}
+							espObjs[p] = o
+						end
+						o.hl.FillColor = col o.hl.OutlineColor = col o.lbl.TextColor3 = col
+						local parts = {}
+						if S.ESPName then parts[#parts + 1] = p.Name end
+						if S.ESPDist then
+							local d = myhrp and math.floor((head.Position - myhrp.Position).Magnitude) or 0
+							parts[#parts + 1] = d .. "m"
+						end
+						if S.ESPHealth then parts[#parts + 1] = math.floor(hum.Health) .. "HP" end
+						o.lbl.Text = table.concat(parts, "  |  ")
+						o.bb.Enabled = #parts > 0
+					else
+						clearESP(p)
+					end
+				end
+			end
+		elseif next(espObjs) then
+			clearAllESP()
+		end
+	end
+end)
+
+track(Players.PlayerRemoving:Connect(function(p)
+	clearESP(p)
+	if lines[p] then pcall(function() lines[p]:Remove() end) lines[p] = nil end
+end))
+
+track(LP.Idled:Connect(function()
+	if S.AntiAFK then
+		pcall(function()
+			local vu = game:GetService("VirtualUser")
+			vu:CaptureController() vu:ClickButton2(Vector2.new())
+		end)
+	end
+end))
+
+cleanup = function()
+	if not alive then return end
+	alive = false
+	pcall(resetFeatures)
+	for _, c in ipairs(mconns) do pcall(function() c:Disconnect() end) end
+	for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
+	for _, g in ipairs(guis) do pcall(function() g:Destroy() end) end
+end
+if getgenv then getgenv().ModMenu_Cleanup = cleanup end
+
+local function destroyMenu()
+	for _, c in ipairs(mconns) do pcall(function() c:Disconnect() end) end
+	mconns, dyn = {}, {}
+	if menuGui then menuGui:Destroy() menuGui = nil end
+	menuFrame = nil
+end
+
+-- ===================== LOADING BAR =====================
+local function runLoadingBar(onFinish)
+	local loadGui = mkGui("BTW_Loading")
+	local frame = new("Frame", {Size = UDim2.new(0, 340, 0, 160), Position = UDim2.new(0.5, -170, 0.5, -80),
+		BackgroundColor3 = Color3.fromRGB(12, 10, 10), BackgroundTransparency = 0.05, ZIndex = 200}, loadGui)
+	round(frame, 14)
+	new("UIStroke", {Thickness = 2.5, Color = Color3.fromRGB(255, 215, 0)}, frame)
+	new("TextLabel", {Size = UDim2.new(1, 0, 0, 35), Position = UDim2.new(0, 0, 0.06, 0), BackgroundTransparency = 1,
+		Text = "⚡ YouTube ByTheWay V1 ⚡", TextColor3 = Color3.fromRGB(255, 215, 0), Font = Enum.Font.GothamBold,
+		TextSize = 18, ZIndex = 201}, frame)
+	new("TextLabel", {Size = UDim2.new(1, 0, 0, 25), Position = UDim2.new(0, 0, 0.34, 0), BackgroundTransparency = 1,
+		Text = L("جاري التحميل...", "Loading..."), TextColor3 = Color3.fromRGB(220, 220, 220),
+		Font = Enum.Font.GothamMedium, TextSize = 13, ZIndex = 201}, frame)
+	local barBg = new("Frame", {Size = UDim2.new(0.88, 0, 0, 18), Position = UDim2.new(0.06, 0, 0.6, 0),
+		BackgroundColor3 = Color3.fromRGB(22, 18, 18), ZIndex = 201}, frame)
+	round(barBg, 9)
+	local barFill = new("Frame", {Size = UDim2.new(0, 0, 1, 0), BackgroundColor3 = Color3.fromRGB(80, 255, 120), ZIndex = 202}, barBg)
+	round(barFill, 9)
+	local pct = new("TextLabel", {Size = UDim2.new(1, 0, 0, 20), Position = UDim2.new(0, 0, 0.8, 0), BackgroundTransparency = 1,
+		Text = "0%", TextColor3 = Color3.fromRGB(80, 255, 120), Font = Enum.Font.Code, TextSize = 13, ZIndex = 201}, frame)
+	task.spawn(function()
+		for i = 1, 100 do
+			if not alive then return end
+			barFill.Size = UDim2.new(i / 100, 0, 1, 0) pct.Text = i .. "%"
+			task.wait(0.01)
+		end
+		task.wait(0.2)
+		loadGui:Destroy()
+		if onFinish then onFinish() end
+	end)
+end
+
+-- ===================== KEY SCREEN =====================
+showKeySystem = function(onUnlocked, expiredNote)
+	local keyGui = mkGui("BTW_Key")
+	local frame = new("Frame", {Size = UDim2.new(0, 330, 0, 250), Position = UDim2.new(0.5, -165, 0.5, -125),
+		BackgroundColor3 = Color3.fromRGB(15, 12, 12), BackgroundTransparency = 0.1, Active = true, ZIndex = 100}, keyGui)
+	round(frame, 10)
+	new("UIStroke", {Thickness = 2, Color = Color3.fromRGB(255, 215, 0)}, frame)
+	local kc = {}
+	makeDraggable(frame, frame, function(c) kc[#kc + 1] = c return c end)
+	frame.Destroying:Connect(function() for _, c in ipairs(kc) do c:Disconnect() end end)
+
+	new("TextLabel", {Size = UDim2.new(1, 0, 0, 28), Position = UDim2.new(0, 0, 0.03, 0), BackgroundTransparency = 1,
+		Text = expiredNote and L("⏰ انتهى مفتاحك - جدّده", "⏰ Key expired - renew it") or L("🔑 أدخل المفتاح للتفعيل", "🔑 Enter your key"),
+		TextColor3 = Color3.fromRGB(255, 215, 0), Font = Enum.Font.GothamBold, TextSize = 14, ZIndex = 101}, frame)
+
+	local selectedType = (session.type == "Paid") and "Paid" or "Free"
+	local typeBtn = new("TextButton", {Size = UDim2.new(0.85, 0, 0, 32), Position = UDim2.new(0.075, 0, 0.22, 0),
+		Text = "", TextColor3 = Color3.new(1, 1, 1), Font = Enum.Font.GothamBold, TextSize = 11, ZIndex = 101,
+		BackgroundColor3 = Color3.fromRGB(50, 40, 80)}, frame)
+	round(typeBtn, 6)
+	local function refreshType()
+		if selectedType == "Free" then
+			typeBtn.Text = L("النوع: مجاني (24 ساعة) - اضغط للتبديل", "Type: Free (24h) - tap to switch")
+			typeBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 80)
+		else
+			typeBtn.Text = L("النوع: VIP (30 يوم) - اضغط للتبديل", "Type: VIP (30 days) - tap to switch")
+			typeBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 0)
+		end
+	end
+	refreshType()
+	typeBtn.MouseButton1Click:Connect(function() selectedType = (selectedType == "Free") and "Paid" or "Free" refreshType() end)
+
+	local box = new("TextBox", {Size = UDim2.new(0.85, 0, 0, 36), Position = UDim2.new(0.075, 0, 0.43, 0),
+		BackgroundColor3 = Color3.fromRGB(25, 18, 18), Text = "", PlaceholderText = L("اكتب المفتاح هنا...", "Type key here..."),
+		TextColor3 = Color3.new(1, 1, 1), Font = Enum.Font.Code, TextSize = 13, ClearTextOnFocus = false, ZIndex = 101}, frame)
+	round(box, 6)
+
+	local btn = new("TextButton", {Size = UDim2.new(0.85, 0, 0, 34), Position = UDim2.new(0.075, 0, 0.64, 0),
+		BackgroundColor3 = Color3.fromRGB(80, 255, 120), Text = L("تحقق / تجديد", "Verify / Renew"),
+		TextColor3 = Color3.new(0, 0, 0), Font = Enum.Font.GothamBold, TextSize = 13, ZIndex = 101}, frame)
+	round(btn, 6)
+
+	new("TextLabel", {Size = UDim2.new(1, 0, 0, 22), Position = UDim2.new(0, 0, 0.86, 0), BackgroundTransparency = 1,
+		Text = CONFIG.YouTube .. "  |  discord.gg/eT7D5tHPkn", TextColor3 = Color3.fromRGB(170, 170, 170),
+		Font = Enum.Font.Gotham, TextSize = 10, ZIndex = 101}, frame)
+
+	btn.MouseButton1Click:Connect(function()
+		local ok, why = applyKey(box.Text, selectedType)
+		if ok then
+			notify(L("تم التحقق ✅ المدة المتبقية: ", "Verified ✅ Time left: ") .. fmtTime(session.expires - os.time()))
+			keyGui:Destroy()
+			if onUnlocked then onUnlocked() end
+		elseif why == "paid_active" then
+			notify(L("❌ لديك اشتراك VIP فعّال", "❌ You already have an active VIP key"))
+		else
+			notify(L("❌ المفتاح غير صحيح!", "❌ Invalid key!"))
+		end
+	end)
+end
+
+-- ===================== MAIN MENU =====================
+buildMenu = function()
+	destroyMenu()
+	menuGui = mkGui("ByTheWay_Main")
+	local mainGui = menuGui
+	local order = 0
+	local GOLD, GREEN, RED = Color3.fromRGB(255, 215, 0), Color3.fromRGB(80, 255, 120), Color3.fromRGB(235, 50, 50)
+
+	local floatBtn = new("TextButton", {Size = UDim2.new(0, 44, 0, 44), Position = UDim2.new(0, 10, 0.5, -22),
+		BackgroundColor3 = Color3.fromRGB(15, 12, 12), BackgroundTransparency = 0.2, Text = "BYT",
+		Font = Enum.Font.GothamBold, TextSize = 12, ZIndex = 999}, mainGui)
+	round(floatBtn, 22)
+	local fStroke = new("UIStroke", {Thickness = 2}, floatBtn)
+	makeDraggable(floatBtn, floatBtn, mtrack)
+
+	menuFrame = new("Frame", {Size = UDim2.new(0, 470, 0, 330), Position = UDim2.new(0.5, -235, 0.5, -165),
+		BackgroundColor3 = Color3.fromRGB(15, 12, 12), BackgroundTransparency = 0.12, Active = true,
+		ClipsDescendants = true, ZIndex = 10}, mainGui)
+	local mainFrame = menuFrame
+	round(mainFrame, 10)
+	local uiScale = new("UIScale", {Scale = S.UIScale or 1}, mainFrame)
+	floatBtn.MouseButton1Click:Connect(function() mainFrame.Visible = not mainFrame.Visible end)
+	local mStroke = new("UIStroke", {Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border}, mainFrame)
+	mtrack(RunService.RenderStepped:Connect(function()
+		local t = os.clock()
+		mStroke.Color = Color3.fromHSV((t % 6) / 6, 1, 1)
+		fStroke.Color = Color3.fromHSV((t % 5) / 5, 1, 1)
+		floatBtn.TextColor3 = Color3.fromHSV(((t + 1) % 5) / 5, 1, 1)
+	end))
+
+	local topBar = new("Frame", {Size = UDim2.new(1, 0, 0, 30), BackgroundColor3 = Color3.fromRGB(25, 18, 18), ZIndex = 11}, mainFrame)
+	round(topBar, 10)
+	makeDraggable(topBar, mainFrame, mtrack)
+	new("TextLabel", {Size = UDim2.new(1, -150, 1, 0), Position = UDim2.new(0, 10, 0, 0), BackgroundTransparency = 1,
+		Text = "YouTube ByTheWay V1", TextColor3 = GOLD, Font = Enum.Font.GothamBold, TextSize = 13,
+		TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 12}, topBar)
+	local langBtn = new("TextButton", {Size = UDim2.new(0, 44, 0, 20), Position = UDim2.new(1, -108, 0.5, -10),
+		BackgroundColor3 = Color3.fromRGB(50, 40, 80), Text = currentLang == "AR" and "EN 🌐" or "عربي 🌐",
+		TextColor3 = Color3.new(1, 1, 1), Font = Enum.Font.GothamBold, TextSize = 10, ZIndex = 12}, topBar)
+	round(langBtn, 4)
+	local minBtn = new("TextButton", {Size = UDim2.new(0, 24, 0, 20), Position = UDim2.new(1, -58, 0.5, -10),
+		BackgroundColor3 = Color3.fromRGB(60, 60, 60), Text = "–", TextColor3 = Color3.new(1, 1, 1),
+		Font = Enum.Font.GothamBold, TextSize = 12, ZIndex = 12}, topBar)
+	round(minBtn, 4)
+	local closeBtn = new("TextButton", {Size = UDim2.new(0, 24, 0, 20), Position = UDim2.new(1, -30, 0.5, -10),
+		BackgroundColor3 = RED, Text = "X", TextColor3 = Color3.new(1, 1, 1), Font = Enum.Font.GothamBold,
+		TextSize = 11, ZIndex = 12}, topBar)
+	round(closeBtn, 4)
+	minBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
+	closeBtn.MouseButton1Click:Connect(function() cleanup() end)
+	langBtn.MouseButton1Click:Connect(function() currentLang = (currentLang == "AR") and "EN" or "AR" rebuildMenu() end)
+
+	-- status bar (live key countdown)
+	local newsLbl = new("TextLabel", {Size = UDim2.new(1, -12, 0, 20), Position = UDim2.new(0, 6, 0, 34),
+		BackgroundColor3 = Color3.fromRGB(30, 20, 20), BackgroundTransparency = 0.3, Text = "",
+		TextColor3 = GREEN, Font = Enum.Font.Code, TextSize = 11, ZIndex = 12}, mainFrame)
+	round(newsLbl, 4)
+	dyn[#dyn + 1] = function()
+		newsLbl.Text = string.format("%s | %s: %s", session.type == "Paid" and "VIP" or "FREE",
+			L("متبقي", "Left"), fmtTime(session.expires - os.time()))
+	end
+
+	local tabBar = new("ScrollingFrame", {Size = UDim2.new(0, 128, 1, -62), Position = UDim2.new(0, 6, 0, 58),
+		BackgroundTransparency = 1, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(),
+		ScrollBarThickness = 3, BorderSizePixel = 0, ZIndex = 11}, mainFrame)
+	new("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder}, tabBar)
+	local contentPanel = new("Frame", {Size = UDim2.new(1, -142, 1, -62), Position = UDim2.new(0, 138, 0, 58),
+		BackgroundTransparency = 1, ZIndex = 11}, mainFrame)
+
+	local pages, tabBtns = {}, {}
+	local function setPage(name)
+		if name == "SUBSCRIBERS" and not isPaid() then notify(L("🔒 للمشتركين VIP والمطورين فقط!", "🔒 VIP / developers only!")) return end
+		if name == "DEV" and not isDev() then notify(L("🔒 للمطورين فقط!", "🔒 Developers only!")) return end
+		currentPage = name
+		for n, pg in pairs(pages) do pg.Visible = (n == name) end
+		for n, b in pairs(tabBtns) do
+			b.BackgroundColor3 = (n == name) and RED or Color3.fromRGB(50, 35, 35)
+			b.TextColor3 = (n == name) and Color3.new(1, 1, 1) or Color3.fromRGB(240, 230, 230)
+		end
+	end
+
+	local tabs = {
+		{"ACCOUNT", "🔑 المفتاح والتجديد", "🔑 Key & Renewal"},
+		{"PLAYER", "🏃 اللاعب والسرعة", "🏃 Player"},
+		{"FLY", "✈️ الطيران", "✈️ Fly"},
+		{"COMBAT", "👁 الكاشف ESP", "👁 ESP"},
+		{"CLICK TP", "📍 التليبورت", "📍 Teleport"},
+		{"NOCLIP", "🧱 اختراق الجدار", "🧱 Noclip"},
+		{"MUSIC", "🎵 الصوتيات", "🎵 Music"},
+		{"SHADER", "🌟 الشادرز", "🌟 Shaders"},
+		{"VIP", "⭐ محرر الشاشة", "⭐ Screen Editor"},
+		{"SUBSCRIBERS", "💎 المشتركين VIP", "💎 VIP Perks"},
+		{"DEV", "🛠 المطورين", "🛠 Developers"},
+		{"FEEDBACK", "💬 الاقتراحات", "💬 Feedback"},
+	}
+	for i, t in ipairs(tabs) do
+		local n = t[1]
+		local b = new("TextButton", {Size = UDim2.new(1, -4, 0, 28), BackgroundColor3 = Color3.fromRGB(50, 35, 35),
+			Text = L(t[2], t[3]), TextColor3 = Color3.fromRGB(240, 230, 230), Font = Enum.Font.GothamBold,
+			TextSize = 11, LayoutOrder = i, ZIndex = 12}, tabBar)
+		round(b, 4)
+		tabBtns[n] = b
+		b.MouseButton1Click:Connect(function() setPage(n) end)
+		local sf = new("ScrollingFrame", {Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, BorderSizePixel = 0,
+			ScrollBarThickness = 3, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(),
+			Visible = false, ZIndex = 12}, contentPanel)
+		new("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder}, sf)
+		pages[n] = sf
+	end
+
+	-- ---------- UI helpers ----------
+	local curBody
+	local function use(name) curBody = pages[name] order = 0 end
+	local function newRow(h)
+		order = order + 1
+		local r = new("Frame", {Size = UDim2.new(1, -6, 0, h or 34), BackgroundColor3 = Color3.fromRGB(35, 24, 24),
+			BackgroundTransparency = 0.2, LayoutOrder = order, ZIndex = 13}, curBody)
+		round(r, 5)
+		return r
+	end
+	local function rowLabel(row, text, reserve, top)
+		local size = top and UDim2.new(1, -(reserve + 12), 0, 18) or UDim2.new(1, -(reserve + 12), 1, 0)
+		return new("TextLabel", {Size = size,
+			Position = UDim2.new(0, 8, 0, top and 2 or 0), BackgroundTransparency = 1, Text = text,
+			TextColor3 = Color3.fromRGB(240, 230, 230), Font = Enum.Font.GothamMedium, TextSize = 11,
+			TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 13}, row)
+	end
+	local function addSection(text)
+		order = order + 1
+		new("TextLabel", {Size = UDim2.new(1, -6, 0, 20), BackgroundTransparency = 1, Text = "— " .. text .. " —",
+			TextColor3 = GOLD, Font = Enum.Font.GothamBold, TextSize = 11, LayoutOrder = order, ZIndex = 13}, curBody)
+	end
+	local function addInfo(fn)
+		local r = newRow(30)
+		local lbl = rowLabel(r, "", 0)
+		lbl.TextColor3 = GREEN lbl.Font = Enum.Font.Code
+		dyn[#dyn + 1] = function() lbl.Text = fn() end
+		lbl.Text = fn()
+		return lbl
+	end
+	local function addButton(text, cb, btnText)
+		local r = newRow()
+		rowLabel(r, text, 74)
+		local b = new("TextButton", {Size = UDim2.new(0, 68, 0, 22), Position = UDim2.new(1, -72, 0.5, -11),
+			BackgroundColor3 = GREEN, Text = btnText or L("تفعيل", "Run"), TextColor3 = Color3.new(0, 0, 0),
+			Font = Enum.Font.GothamBold, TextSize = 11, ZIndex = 13}, r)
+		round(b, 4)
+		b.MouseButton1Click:Connect(function() local ok, err = pcall(cb) if not ok then warn("BTW:", err) end end)
+		return b
+	end
+	local function addToggle(text, key, onChange)
+		local r = newRow()
+		rowLabel(r, text, 56)
+		local b = new("TextButton", {Size = UDim2.new(0, 50, 0, 22), Position = UDim2.new(1, -54, 0.5, -11),
+			Text = "", TextColor3 = Color3.new(1, 1, 1), Font = Enum.Font.GothamBold, TextSize = 11, ZIndex = 13}, r)
+		round(b, 4)
+		local function paint()
+			local on = S[key] and true or false
+			b.Text = on and "ON" or "OFF"
+			b.BackgroundColor3 = on and RED or Color3.fromRGB(50, 35, 35)
+		end
+		paint()
+		b.MouseButton1Click:Connect(function()
+			S[key] = not S[key]
+			paint()
+			if onChange then local ok, err = pcall(onChange, S[key]) if not ok then warn("BTW:", err) end end
+		end)
+	end
+	local function addInput(text, default, cb)
+		local r = newRow()
+		rowLabel(r, text, 74)
+		local box = new("TextBox", {Size = UDim2.new(0, 68, 0, 22), Position = UDim2.new(1, -72, 0.5, -11),
+			BackgroundColor3 = Color3.fromRGB(20, 20, 20), Text = tostring(default), TextColor3 = Color3.new(1, 1, 1),
+			Font = Enum.Font.Code, TextSize = 11, ClearTextOnFocus = false, ZIndex = 13}, r)
+		round(box, 4)
+		box.FocusLost:Connect(function() local ok, err = pcall(cb, box.Text, box) if not ok then warn("BTW:", err) end end)
+		return box
+	end
+	local function addColors(text, cb)
+		local r = newRow(56)
+		rowLabel(r, text, 0, true)
+		local cols = {Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 140, 255),
+			Color3.fromRGB(255, 255, 0), Color3.fromRGB(255, 0, 255), Color3.fromRGB(0, 255, 255),
+			Color3.fromRGB(255, 140, 0), Color3.fromRGB(255, 255, 255)}
+		for i, c in ipairs(cols) do
+			local sw = new("TextButton", {Size = UDim2.new(0, 28, 0, 24), Position = UDim2.new(0, 8 + (i - 1) * 32, 0, 26),
+				BackgroundColor3 = c, Text = "", ZIndex = 13}, r)
+			round(sw, 4)
+			sw.MouseButton1Click:Connect(function() cb(c) end)
+		end
+	end
+	local function guard(v, kind) -- numeric input helper with clamp
+		local n = tonumber(v)
+		if not n then notify(L("اكتب رقماً صحيحاً", "Enter a valid number")) return nil end
+		if kind then n = clampTo(n, kind) end
+		return n
+	end
+
+	-- ================= ACCOUNT =================
+	use("ACCOUNT")
+	addSection(L("حالة المفتاح", "Key status"))
+	addInfo(function() return L("النوع: ", "Type: ") .. (session.type == "Paid" and "VIP" or "FREE") end)
+	addInfo(function() return L("المتبقي: ", "Left: ") .. fmtTime(session.expires - os.time()) end)
+	addInfo(function() return L("ينتهي: ", "Expires: ") .. os.date("%Y-%m-%d %H:%M", session.expires) end)
+	addSection(L("التجديد", "Renewal"))
+	local renewBox = addInput(L("اكتب المفتاح:", "Enter key:"), "", function() end)
+	renewBox.Text = "" renewBox.PlaceholderText = "KEY"
+	addButton(L("تجديد مفتاح مجاني (24 ساعة)", "Renew FREE key (24h)"), function()
+		local ok, why = applyKey(renewBox.Text, "Free")
+		if ok then notify(L("✅ تم تجديد المجاني", "✅ Free key renewed")) renewBox.Text = ""
+		elseif why == "paid_active" then notify(L("❌ لديك VIP فعّال", "❌ VIP is still active"))
+		else notify(L("❌ مفتاح خاطئ", "❌ Wrong key")) end
+	end, L("تجديد", "Renew"))
+	addButton(L("تجديد/ترقية VIP (+30 يوم)", "Renew/Upgrade VIP (+30d)"), function()
+		local ok = applyKey(renewBox.Text, "Paid")
+		if ok then notify(L("✅ تم تجديد VIP", "✅ VIP renewed")) renewBox.Text = "" rebuildMenu()
+		else notify(L("❌ مفتاح خاطئ", "❌ Wrong key")) end
+	end, L("تجديد", "Renew"))
+	addButton(L("نسخ رابط الديسكورد لشراء VIP", "Copy Discord link to get VIP"), function() copy(CONFIG.Discord) end, L("نسخ", "Copy"))
+
+	-- ================= PLAYER =================
+	use("PLAYER")
+	addSection(L("الحركة", "Movement"))
+	addInput(L("سرعة المشي:", "WalkSpeed:"), "16", function(t)
+		local v = guard(t, "maxSpeed") if v then S.Speed = v notify(L("السرعة: ", "Speed: ") .. v) end
+	end)
+	addInput(L("قوة القفز:", "JumpPower:"), "50", function(t)
+		local v = guard(t, "maxJump") if v then S.Jump = v notify(L("القفز: ", "Jump: ") .. v) end
+	end)
+	addToggle(L("قفز لا نهائي", "Infinite Jump"), "InfJump")
+	addToggle(L("دوران تلقائي", "Spin"), "Spin")
+	addInput(L("سرعة الدوران:", "Spin speed:"), "20", function(t) local v = guard(t) if v then S.SpinSpeed = math.clamp(v, 1, 90) end end)
+	addToggle(L("منع الطرد (Anti-AFK)", "Anti-AFK"), "AntiAFK")
+	addSection(L("أدوات", "Tools"))
+	addButton(L("إعادة تعيين السرعة والقفز", "Reset speed & jump"), function()
+		S.Speed, S.Jump = nil, nil
+		local h = getHum() if h then h.WalkSpeed = 16 h.JumpPower = 50 end
+		notify(L("تمت الإعادة", "Reset"))
+	end, L("إعادة", "Reset"))
+	addButton(L("إعادة ضبط كل الميزات", "Reset ALL features"), function() resetFeatures() rebuildMenu() notify(L("تم", "Done")) end, L("إعادة", "Reset"))
+	addButton(L("إعادة إحياء الشخصية", "Respawn character"), function() local h = getHum() if h then h.Health = 0 end end, L("نفّذ", "Do"))
+
+	-- ================= FLY =================
+	use("FLY")
+	addToggle(L("تفعيل الطيران", "Fly"), "Fly", function(on) if on then notify(L("✈️ الطيران شغّال", "✈️ Fly on")) end end)
+	addInput(L("سرعة الطيران:", "Fly speed:"), tostring(S.FlySpeed), function(t)
+		local v = guard(t, "maxFly") if v then S.FlySpeed = v end
+	end)
+	local function holdBtn(text, flag)
+		local r = newRow()
+		rowLabel(r, text, 74)
+		local b = new("TextButton", {Size = UDim2.new(0, 68, 0, 22), Position = UDim2.new(1, -72, 0.5, -11),
+			BackgroundColor3 = Color3.fromRGB(60, 90, 200), Text = L("اضغط", "Hold"), TextColor3 = Color3.new(1, 1, 1),
+			Font = Enum.Font.GothamBold, TextSize = 11, ZIndex = 13}, r)
+		round(b, 4)
+		b.InputBegan:Connect(function(i)
+			if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then S[flag] = true end
+		end)
+		b.InputEnded:Connect(function(i)
+			if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then S[flag] = false end
+		end)
+	end
+	holdBtn(L("صعود (أو Space / E)", "Up (or Space / E)"), "FlyUp")
+	holdBtn(L("نزول (أو Q / Ctrl)", "Down (or Q / Ctrl)"), "FlyDown")
+	addInfo(function() return L("الجويستيك/WASD للاتجاه حسب الكاميرا", "Joystick/WASD moves toward camera") end)
+
+	-- ================= ESP =================
+	use("COMBAT")
+	addToggle(L("كاشف اللاعبين ESP", "Player ESP"), "ESP")
+	S.ESPName = S.ESPName == nil and true or S.ESPName
+	S.ESPDist = S.ESPDist == nil and true or S.ESPDist
+	addToggle(L("إظهار الأسماء", "Show names"), "ESPName")
+	addToggle(L("إظهار المسافة", "Show distance"), "ESPDist")
+	addToggle(L("إظهار الصحة", "Show health"), "ESPHealth")
+	addToggle(L("ألوان قوس قزح", "Rainbow color"), "ESPRainbow")
+	addColors(L("لون الـ ESP", "ESP color"), function(c) S.ESPColor = c S.ESPRainbow = false end)
+	addInput(L("لون مخصص R,G,B:", "Custom R,G,B:"), "255,0,0", function(t)
+		local r, g, b = tostring(t):match("(%d+)%D+(%d+)%D+(%d+)")
+		if r then S.ESPColor = Color3.fromRGB(math.min(255, tonumber(r)), math.min(255, tonumber(g)), math.min(255, tonumber(b))) S.ESPRainbow = false
+		else notify("R,G,B  e.g. 255,0,0") end
+	end)
+	addToggle(L("خطوط التتبع (VIP)", "Tracers (VIP)"), "Tracers", function(on)
+		if on and not isPaid() then S.Tracers = false notify(L("🔒 للـ VIP فقط", "🔒 VIP only")) rebuildMenu() return end
+		if on and not Drawing then S.Tracers = false notify(L("المنفذ لا يدعم Drawing", "Executor lacks Drawing")) rebuildMenu() end
+	end)
+
+	-- ================= TELEPORT =================
+	use("CLICK TP")
+	addToggle(L("انتقال بالضغط (Click TP)", "Click TP"), "ClickTp")
+	addSection(L("نقاط", "Points"))
+	addButton(L("حفظ موقعي الحالي", "Save my position"), function()
+		local h = getHRP() if h then S.SavedCF = h.CFrame notify(L("تم الحفظ 📍", "Saved 📍")) end
+	end, L("حفظ", "Save"))
+	addButton(L("العودة للموقع المحفوظ", "Return to saved position"), function()
+		local h = getHRP()
+		if h and S.SavedCF then h.CFrame = S.SavedCF else notify(L("لا يوجد موقع محفوظ", "Nothing saved")) end
+	end, L("انتقال", "Go"))
+	addButton(L("الانتقال لنقطة البداية (Spawn)", "Teleport to spawn"), function()
+		local h = getHRP()
+		local sp = workspace:FindFirstChildWhichIsA("SpawnLocation", true)
+		if h and sp then h.CFrame = sp.CFrame + Vector3.new(0, 5, 0) else notify(L("لا توجد نقطة بداية", "No spawn found")) end
+	end, L("انتقال", "Go"))
+	addButton(L("انتقال للاعب عشوائي", "Teleport to random player"), function()
+		local list = {}
+		for _, p in ipairs(Players:GetPlayers()) do if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then list[#list + 1] = p end end
+		local h = getHRP()
+		if h and #list > 0 then h.CFrame = list[math.random(#list)].Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 4)
+		else notify(L("لا يوجد لاعبون", "No players")) end
+	end, L("انتقال", "Go"))
+	addSection(L("قائمة اللاعبين", "Players"))
+	order = order + 1
+	local listHolder = new("Frame", {Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1, LayoutOrder = order + 1000, ZIndex = 13}, curBody)
+	new("UIListLayout", {Padding = UDim.new(0, 3), SortOrder = Enum.SortOrder.Name}, listHolder)
+	local function refreshList()
+		for _, c in ipairs(listHolder:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= LP then
+				local b = new("TextButton", {Name = p.Name, Size = UDim2.new(1, 0, 0, 26), BackgroundColor3 = Color3.fromRGB(60, 45, 45),
+					Text = "📍 " .. p.DisplayName .. " (@" .. p.Name .. ")", TextColor3 = Color3.new(1, 1, 1),
+					Font = Enum.Font.GothamMedium, TextSize = 11, ZIndex = 13}, listHolder)
+				round(b, 4)
+				b.MouseButton1Click:Connect(function()
+					local h = getHRP()
+					local t = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+					if h and t then h.CFrame = t.CFrame * CFrame.new(0, 0, 4) else notify(L("اللاعب غير متاح", "Player unavailable")) end
+				end)
+			end
+		end
+	end
+	refreshList()
+	addButton(L("تحديث القائمة", "Refresh list"), refreshList, L("تحديث", "Refresh"))
+
+	-- ================= NOCLIP =================
+	use("NOCLIP")
+	addToggle(L("اختراق الجدران (Noclip)", "Noclip"), "Noclip")
+	addSection(L("الجاذبية", "Gravity"))
+	addInput(L("قيمة الجاذبية:", "Gravity:"), "196.2", function(t) local v = guard(t) if v then S.Gravity = math.clamp(v, 0, 1000) end end)
+	addButton(L("جاذبية منخفضة (50)", "Low gravity (50)"), function() S.Gravity = 50 end, L("تفعيل", "Run"))
+	addButton(L("جاذبية عادية", "Normal gravity"), function() S.Gravity = nil workspace.Gravity = 196.2 end, L("تفعيل", "Run"))
+
+	-- ================= MUSIC =================
+	use("MUSIC")
+	addInput(L("معرف الصوت (ID):", "Audio ID:"), "9046835519", function(t)
+		local id = tostring(t):match("%d+")
+		if id then playMusic(id) S.MusicId = id notify(L("🎵 تشغيل", "🎵 Playing")) else notify(L("اكتب رقم ID", "Enter numeric ID")) end
+	end)
+	addButton(L("إيقاف الصوت", "Stop audio"), stopMusic, L("إيقاف", "Stop"))
+	addButton(L("إيقاف مؤقت / استئناف", "Pause / Resume"), function()
+		if sound then if sound.IsPlaying then sound:Pause() else sound:Resume() end end
+	end, L("تبديل", "Toggle"))
+	addInput(L("مستوى الصوت (0-10):", "Volume (0-10):"), "1", function(t)
+		local v = guard(t) if v then S.MusicVol = math.clamp(v, 0, 10) if sound then sound.Volume = S.MusicVol end end
+	end)
+	addInput(L("سرعة التشغيل (0.2-3):", "Speed (0.2-3):"), "1", function(t)
+		local v = guard(t) if v then S.MusicSpeed = math.clamp(v, 0.2, 3) if sound then sound.PlaybackSpeed = S.MusicSpeed end end
+	end)
+	addToggle(L("تكرار", "Loop"), "MusicNoLoop", function(v) if sound then sound.Looped = not v end end)
+	addInfo(function() return sound and (sound.IsPlaying and "▶ " or "⏸ ") .. (S.MusicId or "") or "⏹" end)
+
+	-- ================= SHADERS =================
+	use("SHADER")
+	local function setCC(p)
+		local cc = Lighting:FindFirstChild("BTW_CC") or new("ColorCorrectionEffect", {Name = "BTW_CC"}, Lighting)
+		cc.Brightness = p.b or 0 cc.Contrast = p.c or 0 cc.Saturation = p.s or 0 cc.TintColor = p.t or Color3.new(1, 1, 1)
+	end
+	addSection(L("ألوان جاهزة", "Presets"))
+	local presets = {
+		{"Vivid", "ألوان ساطعة", {b = 0.02, c = 0.15, s = 0.5}},
+		{"Sunset", "غروب سينمائي", {c = 0.1, s = 0.3, t = Color3.fromRGB(255, 200, 150)}},
+		{"Night Vision", "رؤية ليلية", {b = 0.15, c = 0.2, s = -0.3, t = Color3.fromRGB(120, 255, 120)}},
+		{"Dark", "داكن", {b = -0.12, c = 0.2, s = -0.1}},
+		{"Neon", "نيون", {c = 0.3, s = 1}},
+		{"Black & White", "أبيض وأسود", {c = 0.1, s = -1}},
+		{"Cinematic", "سينمائي", {c = 0.25, s = -0.1, t = Color3.fromRGB(255, 240, 220)}},
+		{"Ice", "جليدي", {c = 0.1, s = 0.1, t = Color3.fromRGB(170, 200, 255)}},
+		{"Warm", "دافئ", {c = 0.05, s = 0.2, t = Color3.fromRGB(255, 220, 180)}},
+	}
+	for _, pr in ipairs(presets) do addButton(L(pr[2], pr[1]), function() setCC(pr[3]) end) end
+	addButton(L("إزالة كل الشادرز", "Remove all shaders"), function()
+		removeFx("BTW_CC") removeFx("BTW_Bloom") removeFx("BTW_Rays") restoreLighting() S.Fullbright = nil
+		notify(L("تمت الإزالة", "Removed"))
+	end, L("إزالة", "Remove"))
+	addSection(L("مؤثرات", "Effects"))
+	addToggle("Bloom", "Bloom", function(on)
+		removeFx("BTW_Bloom")
+		if on then new("BloomEffect", {Name = "BTW_Bloom", Intensity = 1, Size = 24, Threshold = 0.8}, Lighting) end
+	end)
+	addToggle("Sun Rays", "Rays", function(on)
+		removeFx("BTW_Rays")
+		if on then new("SunRaysEffect", {Name = "BTW_Rays", Intensity = 0.25, Spread = 1}, Lighting) end
+	end)
+	addToggle(L("إضاءة كاملة (Fullbright)", "Fullbright"), "Fullbright", function(on)
+		if on then
+			Lighting.Brightness = 2 Lighting.ClockTime = 14 Lighting.GlobalShadows = false
+			Lighting.Ambient = Color3.fromRGB(200, 200, 200) Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200)
+		else restoreLighting() end
+	end)
+	addToggle(L("إزالة الضباب", "No fog"), "NoFog", function(on)
+		if on then Lighting.FogEnd = 1e6 Lighting.FogStart = 1e6 else Lighting.FogEnd = origLighting.FogEnd Lighting.FogStart = origLighting.FogStart end
+	end)
+	addInput(L("وقت اليوم (0-24):", "Time of day (0-24):"), tostring(math.floor(Lighting.ClockTime)), function(t)
+		local v = guard(t) if v then Lighting.ClockTime = math.clamp(v, 0, 24) end
+	end)
+
+	-- ================= VIP SCREEN EDITOR =================
+	use("VIP")
+	addSection(L("الواجهة", "Interface"))
+	addToggle(L("إخفاء الدردشة", "Hide chat"), "HideChat", function(v) setCore(coreTypes.Chat, not v) end)
+	addToggle(L("إخفاء قائمة اللاعبين", "Hide player list"), "HideList", function(v) setCore(coreTypes.PlayerList, not v) end)
+	addToggle(L("إخفاء الحقيبة", "Hide backpack"), "HideBag", function(v) setCore(coreTypes.Backpack, not v) end)
+	addToggle(L("إخفاء شريط الصحة", "Hide health bar"), "HideHP", function(v) setCore(coreTypes.Health, not v) end)
+	addToggle(L("وضع السينما (إخفاء كل شيء)", "Cinema mode (hide all)"), "Cinema", function(v)
+		setCore(Enum.CoreGuiType.All, not v)
+		if v then setCore(Enum.CoreGuiType.Chat, false) end
+	end)
+	addToggle(L("إخفاء أسماء اللاعبين العائمة", "Hide overhead names"), "HideNames", function(v)
+		if not v then for _, pl in ipairs(Players:GetPlayers()) do
+			local h = pl.Character and pl.Character:FindFirstChildOfClass("Humanoid")
+			if h then h.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer end
+		end end
+	end)
+	addSection(L("الكاميرا", "Camera"))
+	addInput(L("زاوية الرؤية FOV:", "FOV:"), "70", function(t) local v = guard(t) if v then S.FOV = math.clamp(v, 20, 120) end end)
+	addButton("FOV 120", function() S.FOV = 120 end) addButton("FOV 90", function() S.FOV = 90 end)
+	addButton(L("إعادة FOV الافتراضي", "Reset FOV"), function() S.FOV = nil if cam() then cam().FieldOfView = 70 end end, L("إعادة", "Reset"))
+	addButton(L("فك حد التكبير (Zoom)", "Unlock max zoom"), function()
+		LP.CameraMaxZoomDistance = 100000 LP.CameraMinZoomDistance = 0
+	end)
+	addSection(L("واجهة المود", "Menu look"))
+	addInput(L("حجم القائمة (0.6-1.5):", "Menu scale (0.6-1.5):"), tostring(S.UIScale or 1), function(t)
+		local v = guard(t) if v then S.UIScale = math.clamp(v, 0.6, 1.5) uiScale.Scale = S.UIScale end
+	end)
+	addInput(L("شفافية القائمة (0-0.9):", "Menu transparency (0-0.9):"), "0.12", function(t)
+		local v = guard(t) if v then mainFrame.BackgroundTransparency = math.clamp(v, 0, 0.9) end
+	end)
+
+	-- ================= VIP PERKS =================
+	use("SUBSCRIBERS")
+	addInfo(function() return L("حدود VIP: سرعة ", "VIP limits: speed ") .. Rules.Paid.maxSpeed .. L(" | طيران ", " | fly ") .. Rules.Paid.maxFly end)
+	addToggle(L("شخصية قوس قزح", "Rainbow character"), "Rainbow")
+	addToggle(L("خطوط التتبع", "ESP Tracers"), "Tracers", function(on)
+		if on and not Drawing then S.Tracers = false notify(L("المنفذ لا يدعم Drawing", "Executor lacks Drawing")) rebuildMenu() end
+	end)
+	addButton(L("رفع الأداء FPS Boost", "FPS Boost"), function()
+		Lighting.GlobalShadows = false
+		pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
+		for _, d in ipairs(workspace:GetDescendants()) do
+			if d:IsA("ParticleEmitter") or d:IsA("Trail") or d:IsA("Smoke") or d:IsA("Fire") or d:IsA("Sparkles") then d.Enabled = false end
+		end
+		notify(L("تم رفع الأداء", "FPS boost applied"))
+	end, L("تطبيق", "Apply"))
+	addButton(L("سرعة VIP (250)", "VIP speed (250)"), function() S.Speed = 250 end)
+	addButton(L("طيران VIP سريع (200)", "VIP fast fly (200)"), function() S.FlySpeed = 200 end)
+
+	-- ================= DEV =================
+	use("DEV")
+	addInfo(function() return string.format("FPS: %d  |  Ping: %s", fpsShown, (function()
+		local ok, v = pcall(function() return Stats.Network.ServerStatsItem["Data Ping"]:GetValueString() end)
+		return ok and v or "?" end)()) end)
+	addInfo(function() return "Players: " .. #Players:GetPlayers() .. "  |  PlaceId: " .. game.PlaceId end)
+	addButton(L("نسخ UserID", "Copy UserID"), function() copy(tostring(LP.UserId)) end, L("نسخ", "Copy"))
+	addButton(L("نسخ JobId (السيرفر)", "Copy server JobId"), function() copy(game.JobId) end, L("نسخ", "Copy"))
+	addButton(L("طباعة معلومات الحساب", "Print account info"), function()
+		print(string.format("[BTW] %s | %d | age %d | key %s", LP.Name, LP.UserId, LP.AccountAge, tostring(session.type)))
+		notify(L("تمت الطباعة في F9", "Printed to console (F9)"))
+	end, L("طباعة", "Print"))
+	addButton(L("إعادة الدخول للسيرفر", "Rejoin server"), function()
+		if #Players:GetPlayers() <= 1 then LP:Kick("Rejoining...") task.wait() TeleportService:Teleport(game.PlaceId, LP)
+		else TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LP) end
+	end, L("دخول", "Rejoin"))
+	addButton(L("إعادة بناء الواجهة", "Rebuild GUI"), function() rebuildMenu() end, L("بناء", "Rebuild"))
+	addButton(L("تنظيف السكربت (Insert)", "Unload script (Insert)"), function() cleanup() end, L("إغلاق", "Unload"))
+
+	-- ================= FEEDBACK =================
+	use("FEEDBACK")
+	addButton(L("نسخ رابط الديسكورد", "Copy Discord link"), function() copy(CONFIG.Discord) end, L("نسخ", "Copy"))
+	addButton(L("نسخ قناة اليوتيوب", "Copy YouTube channel"), function() copy("https://youtube.com/@bythewayiq") end, L("نسخ", "Copy"))
+	local fbBox = addInput(L("اكتب اقتراحك:", "Write suggestion:"), "", function() end)
+	fbBox.PlaceholderText = "..."
+	addButton(L("نسخ الاقتراح لإرساله في الديسكورد", "Copy suggestion to send on Discord"), function()
+		if fbBox.Text ~= "" then
+			copy(string.format("[BTW V1 feedback] %s (%s): %s", LP.Name, tostring(session.type), fbBox.Text))
+		else notify(L("اكتب شيئاً أولاً", "Write something first")) end
+	end, L("نسخ", "Copy"))
+
+	setPage(pages[currentPage] and currentPage or "PLAYER")
+	for _, f in ipairs(dyn) do pcall(f) end
+end
+
+rebuildMenu = function()
+	local visible = menuFrame == nil or menuFrame.Visible
+	local pos = menuFrame and menuFrame.Position
+	buildMenu()
+	if menuFrame then menuFrame.Visible = visible if pos then menuFrame.Position = pos end end
+end
+
+-- 1-second ticker: FPS, live labels, key expiry
+task.spawn(function()
+	while alive do
+		task.wait(1)
+		fpsShown = fpsCount fpsCount = 0
+		if menuGui then
+			for _, f in ipairs(dyn) do pcall(f) end
+			if not sessionValid() then
+				notify(L("⏰ انتهى المفتاح! جدّده للمتابعة", "⏰ Key expired! Renew to continue"))
+				resetFeatures()
+				destroyMenu()
+				showKeySystem(function() buildMenu() end, true)
+			end
+		end
+	end
+end)
+
+track(UIS.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.Insert then cleanup()
+	elseif input.KeyCode == Enum.KeyCode.RightShift and menuFrame then menuFrame.Visible = not menuFrame.Visible end
+end))
+
+-- ===================== START =====================
+loadSession()
+runLoadingBar(function()
+	if sessionValid() then
+		buildMenu()
+		notify(L("أهلاً! المدة المتبقية: ", "Welcome! Time left: ") .. fmtTime(session.expires - os.time()))
+	else
+		showKeySystem(function()
+			buildMenu()
+			notify("YouTube ByTheWay V1 Loaded Successfully!")
+		end, session.type ~= nil)
+	end
+end)
