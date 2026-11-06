@@ -1,1 +1,1107 @@
-if getgenv and getgenv().NNHub_Cleanup then pcall(getgenv().NNHub_Cleanup)end local Players=game:GetService(string.char(80,108,97,121,101,114,115))local RunService=game:GetService(string.char(82,117,110,83,101,114,118,105,99,101))local UIS=game:GetService(string.char(85,115,101,114,73,110,112,117,116,83,101,114,118,105,99,101))local StarterGui=game:GetService(string.char(83,116,97,114,116,101,114,71,117,105))local Lighting=game:GetService(string.char(76,105,103,104,116,105,110,103))local HttpService=game:GetService(string.char(72,116,116,112,83,101,114,118,105,99,101))local TeleportSvc=game:GetService(string.char(84,101,108,101,112,111,114,116,83,101,114,118,105,99,101))local TweenService=game:GetService(string.char(84,119,101,101,110,83,101,114,118,105,99,101))local Stats=game:GetService(string.char(83,116,97,116,115))local CoreGui=game:GetService(string.char(67,111,114,101,71,117,105))local VirtualUser=game:GetService(string.char(86,105,114,116,117,97,108,85,115,101,114))local LP=Players.LocalPlayer local CONFIG={Title=string.char(57,57,78,32,72,117,98),Version=string.char(86,49),Youtube=string.char(89,111,117,84,117,98,101,58,32,104,116,116,112,115,58,47,47,121,111,117,116,117,98,101,46,99,111,109,47,64,98,121,116,104,101,119,97,121,105,113),Discord=string.char(104,116,116,112,115,58,47,47,100,105,115,99,111,114,100,46,103,103,47,102,75,89,101,101,82,84,83,102,85),RequireKey=true,Keys={[string.char(57,57,78,45,70,82,69,69,45,50,48,50,55)]=string.char(70,114,101,101),[string.char(57,57,78,45,86,73,73,80,45,50,48,50,55)]=string.char(80,97,105,100),},Limits={Free={speed=60,fly=80,jump=100},Paid={speed=250,fly=300,jump=300},},SettingsFile=string.char(78,78,72,117,98,95,83,101,116,116,105,110,103,115,46,106,115,111,110),SessionFile=string.char(78,78,72,117,98,95,83,101,115,115,105,111,110,46,106,115,111,110),}local NAMES={CoinFolders={string.char(73,116,101,109,115),string.char(68,114,111,112,115)},CoinNamePart="",DropFolders={string.char(67,104,97,114,97,99,116,101,114,115),string.char(67,104,101,115,116,115),string.char(67,104,105,108,100,114,101,110)},DropNameParts={string.char(67,104,105,108,100),string.char(75,105,100),string.char(67,104,101,115,116)},},}local FONT=Enum.Font.SourceSansSemibold local C={bg=Color3.fromRGB(14,14,18),panel=Color3.fromRGB(22,22,30),item=Color3.fromRGB(30,30,42),hover=Color3.fromRGB(42,42,58),accent=Color3.fromRGB(235,60,70),gold=Color3.fromRGB(255,215,0),text=Color3.fromRGB(238,238,246),sub=Color3.fromRGB(150,150,172),off=Color3.fromRGB(70,70,92),red=Color3.fromRGB(255,77,77),green=Color3.fromRGB(80,255,120),blue=Color3.fromRGB(90,170,255),}local L={EN={HOME=string.char(72,111,109,101),FARM=string.char(65,117,116,111,32,73,116,101,109,115),COMBAT=string.char(82,101,115,99,117,101),PLAYER=string.char(80,108,97,121,101,114),TELEPORT=string.char(84,101,108,101,112,111,114,116),VISUALS=string.char(86,105,115,117,97,108,115),SERVER=string.char(83,101,114,118,101,114),KEYS=string.char(75,101,121,98,105,110,100,115),SETTINGS=string.char(83,101,116,116,105,110,103,115),G_MAIN=string.char(77,65,73,78),G_GAME=string.char(71,65,77,69),G_SYSTEM=string.char(83,89,83,84,69,77),k_title=string.char(65,99,116,105,118,97,116,101,32,57,57,78,32,72,117,98),k_sub=string.char(67,104,111,111,115,101,32,121,111,117,114,32,112,108,97,110,44,32,116,104,101,110,32,101,110,116,101,114,32,116,104,101,32,107,101,121),k_free=string.char(70,114,101,101),k_paid=string.char(80,97,105,100),k_ph=string.char(84,121,112,101,32,121,111,117,114,32,107,101,121,32,104,101,114,101,46,46,46),k_btn=string.char(65,99,116,105,118,97,116,101),k_bad=string.char(73,110,118,97,108,105,100,32,107,101,121),k_ok=string.char(75,101,121,32,97,99,99,101,112,116,101,100),lang=string.char(76,97,110,103,117,97,103,101),ld1=string.char(76,111,97,100,105,110,103,32,109,111,100,117,108,101,115,46,46,46),ld2=string.char(82,101,97,100,105,110,103,32,115,101,116,116,105,110,103,115,46,46,46),ld3=string.char(80,114,101,112,97,114,105,110,103,32,105,110,116,101,114,102,97,99,101,46,46,46),search=string.char(83,101,97,114,99,104,32,102,101,97,116,117,114,101,115,46,46,46),h_welcome=string.char(87,101,108,99,111,109,101),h_plan=string.char(80,108,97,110),h_role=string.char(82,111,108,101),h_fps=string.char(70,80,83),h_ping=string.char(80,105,110,103),h_up=string.char(83,101,115,115,105,111,110,32,116,105,109,101),h_yt=string.char(67,111,112,121,32,89,111,117,84,117,98,101),h_dc=string.char(67,111,112,121,32,68,105,115,99,111,114,100),h_copied=string.char(67,111,112,105,101,100,33),h_info=string.char(73,110,102,111),h_links=string.char(76,105,110,107,115),f_head=string.char(65,117,116,111,32,73,116,101,109,115),f_coin=string.char(65,117,116,111,32,103,111,32,116,111,32,110,101,97,114,101,115,116,32,105,116,101,109),f_range=string.char(83,101,97,114,99,104,32,114,97,110,103,101),f_height=string.char(72,101,105,103,104,116,32,97,98,111,118,101,32,105,116,101,109),f_delay=string.char(67,111,108,108,101,99,116,32,100,101,108,97,121,32,40,109,115,41),f_esp=string.char(73,116,101,109,32,69,83,80),f_notify=string.char(82,97,114,101,32,105,116,101,109,32,110,111,116,105,102,105,101,114),f_rare=string.char(82,97,114,101,32,105,116,101,109,32,107,101,121,119,111,114,100,32,40,101,46,103,46,32,68,105,97,109,111,110,100,41),c_head=string.char(82,101,115,99,117,101),c_knifeesp=string.char(67,104,105,108,100,114,101,110,32,47,32,67,104,101,115,116,32,69,83,80),c_tpknife=string.char(84,101,108,101,112,111,114,116,32,116,111,32,110,101,97,114,101,115,116,32,99,104,105,108,100,32,47,32,99,104,101,115,116),c_none=string.char(78,111,116,104,105,110,103,32,102,111,117,110,100),p_head=string.char(77,111,118,101,109,101,110,116),p_speed_on=string.char(67,117,115,116,111,109,32,115,112,101,101,100),p_speed=string.char(87,97,108,107,32,115,112,101,101,100),p_jump_on=string.char(67,117,115,116,111,109,32,106,117,109,112),p_jump=string.char(74,117,109,112,32,112,111,119,101,114),p_fly=string.char(70,108,121),p_flyspeed=string.char(70,108,121,32,115,112,101,101,100),p_noclip=string.char(78,111,99,108,105,112),p_inf=string.char(73,110,102,105,110,105,116,101,32,106,117,109,112),p_afk=string.char(65,110,116,105,32,65,70,75),p_cam=string.char(67,97,109,101,114,97),p_fov_on=string.char(67,117,115,116,111,109,32,70,79,86),p_fov=string.char(70,105,101,108,100,32,111,102,32,118,105,101,119),p_grav_on=string.char(67,117,115,116,111,109,32,103,114,97,118,105,116,121),p_grav=string.char(71,114,97,118,105,116,121),t_head=string.char(84,101,108,101,112,111,114,116),t_tween=string.char(84,101,108,101,112,111,114,116,32,115,112,101,101,100),t_player=string.char(80,108,97,121,101,114,32,110,97,109,101),t_go=string.char(84,101,108,101,112,111,114,116,32,116,111,32,112,108,97,121,101,114),t_wp=string.char(87,97,121,112,111,105,110,116,115),t_wp_name=string.char(87,97,121,112,111,105,110,116,32,110,97,109,101),t_wp_save=string.char(83,97,118,101,32,99,117,114,114,101,110,116,32,112,111,115,105,116,105,111,110),t_wp_go=string.char(71,111,32,116,111,32,119,97,121,112,111,105,110,116),t_wp_del=string.char(68,101,108,101,116,101,32,119,97,121,112,111,105,110,116),t_coin=string.char(84,101,108,101,112,111,114,116,32,116,111,32,110,101,97,114,101,115,116,32,105,116,101,109),t_weapon=string.char(84,101,108,101,112,111,114,116,32,116,111,32,110,101,97,114,101,115,116,32,99,104,105,108,100,32,47,32,99,104,101,115,116),t_click=string.char(67,116,114,108,32,43,32,67,108,105,99,107,32,116,101,108,101,112,111,114,116),t_saved=string.char(83,97,118,101,100),t_nowp=string.char(78,111,32,119,97,121,112,111,105,110,116,115),v_head=string.char(86,105,115,117,97,108,115),v_esp=string.char(80,108,97,121,101,114,32,69,83,80),v_dist=string.char(69,83,80,32,109,97,120,32,100,105,115,116,97,110,99,101),v_full=string.char(70,117,108,108,98,114,105,103,104,116),v_fog=string.char(82,101,109,111,118,101,32,102,111,103),v_fps=string.char(70,80,83,32,98,111,111,115,116,32,40,111,110,101,32,116,105,109,101,41),s_head=string.char(83,101,114,118,101,114),s_rejoin=string.char(82,101,106,111,105,110,32,115,101,114,118,101,114),s_hop=string.char(83,101,114,118,101,114,32,104,111,112),s_lowhop=string.char(72,111,112,32,116,111,32,108,111,119,32,112,111,112,117,108,97,116,105,111,110),s_copy=string.char(67,111,112,121,32,74,111,98,73,100),s_join_in=string.char(74,111,98,73,100,32,116,111,32,106,111,105,110),s_join=string.char(74,111,105,110,32,74,111,98,73,100),s_players=string.char(80,108,97,121,101,114,115),kb_menu=string.char(84,111,103,103,108,101,32,109,101,110,117),kb_fly=string.char(84,111,103,103,108,101,32,102,108,121),kb_noclip=string.char(84,111,103,103,108,101,32,110,111,99,108,105,112),kb_panic=string.char(80,97,110,105,99,32,40,99,108,111,115,101,32,97,108,108,41),kb_press=string.char(80,114,101,115,115,32,97,32,107,101,121,46,46,46),st_lang=string.char(83,119,105,116,99,104,32,108,97,110,103,117,97,103,101),st_scale=string.char(73,110,116,101,114,102,97,99,101,32,115,99,97,108,101,32,40,37,41),st_save=string.char(83,97,118,101,32,115,101,116,116,105,110,103,115),st_reset=string.char(82,101,115,101,116,32,115,101,116,116,105,110,103,115),st_saved=string.char(83,101,116,116,105,110,103,115,32,115,97,118,101,100),st_credits=string.char(77,97,100,101,32,119,105,116,104,32,76,117,97),st_names=(string.char(73,102,32,97,32,102,101,97,116,117,114,101,32,102,105,110,100,115,32,110,111,116,104,105,110,103,44,32,101,100,105,116,32,116,104,101,32,78,65,77,69,83,32,116,97,98,108,101,32,97,116,32,116,104,101,32,116,111,112,32,111,102,32,116)..string.char(104,101,32,115,99,114,105,112,116)),st_warn=(string.char(86,105,115,117,97,108,32,47,32,109,111,118,101,109,101,110,116,32,47,32,116,101,108,101,112,111,114,116,32,102,101,97,116,117,114,101,115,32,111,110,108,121,46,32,78,111,116,32,103,117,97,114,97,110,116,101,101,100,32,98,97,110,45,112)..string.char(114,111,111,102,44,32,117,115,101,32,97,116,32,121,111,117,114,32,111,119,110,32,114,105,115,107,46)),},AR={HOME=string.char(216,167,217,132,216,177,216,166,217,138,216,179,217,138,216,169),FARM=string.char(216,172,217,133,216,185,32,216,170,217,132,217,130,216,167,216,166,217,138),COMBAT=string.char(216,167,217,132,216,165,217,134,217,130,216,167,216,176),PLAYER=string.char(216,167,217,132,217,132,216,167,216,185,216,168),TELEPORT=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132),VISUALS=string.char(216,167,217,132,217,133,216,177,216,166,217,138,216,167,216,170),SERVER=string.char(216,167,217,132,216,179,217,138,216,177,217,129,216,177),KEYS=string.char(216,167,217,132,216,167,216,174,216,170,216,181,216,167,216,177,216,167,216,170),SETTINGS=string.char(216,167,217,132,216,165,216,185,216,175,216,167,216,175,216,167,216,170),G_MAIN=string.char(216,167,217,132,216,177,216,166,217,138,216,179,217,138),G_GAME=string.char(216,167,217,132,217,132,216,185,216,168,216,169),G_SYSTEM=string.char(216,167,217,132,217,134,216,184,216,167,217,133),k_title=string.char(216,170,217,129,216,185,217,138,217,132,32,57,57,78,32,72,117,98),k_sub=string.char(216,167,216,174,216,170,216,177,32,216,174,216,183,216,170,217,131,32,216,171,217,133,32,216,163,216,175,216,174,217,132,32,216,167,217,132,217,133,217,129,216,170,216,167,216,173),k_free=string.char(217,133,216,172,216,167,217,134,217,138),k_paid=string.char(217,133,216,175,217,129,217,136,216,185),k_ph=string.char(216,167,217,131,216,170,216,168,32,216,167,217,132,217,133,217,129,216,170,216,167,216,173,32,217,135,217,134,216,167,46,46,46),k_btn=string.char(216,170,217,129,216,185,217,138,217,132),k_bad=string.char(217,133,217,129,216,170,216,167,216,173,32,216,186,217,138,216,177,32,216,181,216,173,217,138,216,173),k_ok=string.char(216,170,217,133,32,217,130,216,168,217,136,217,132,32,216,167,217,132,217,133,217,129,216,170,216,167,216,173),lang=string.char(216,167,217,132,217,132,216,186,216,169),ld1=string.char(216,172,216,167,216,177,217,138,32,216,170,216,173,217,133,217,138,217,132,32,216,167,217,132,217,136,216,173,216,175,216,167,216,170,46,46,46),ld2=string.char(216,172,216,167,216,177,217,138,32,217,130,216,177,216,167,216,161,216,169,32,216,167,217,132,216,165,216,185,216,175,216,167,216,175,216,167,216,170,46,46,46),ld3=string.char(216,172,216,167,216,177,217,138,32,216,170,216,172,217,135,217,138,216,178,32,216,167,217,132,217,136,216,167,216,172,217,135,216,169,46,46,46),search=string.char(216,167,216,168,216,173,216,171,32,216,185,217,134,32,217,133,217,138,216,178,216,169,46,46,46),h_welcome=string.char(216,163,217,135,217,132,216,167,217,139),h_plan=string.char(216,167,217,132,216,174,216,183,216,169),h_role=string.char(216,167,217,132,216,175,217,136,216,177),h_fps=string.char(216,167,217,132,216,165,216,183,216,167,216,177,216,167,216,170),h_ping=string.char(216,167,217,132,216,168,217,138,217,134,216,186),h_up=string.char(217,133,216,175,216,169,32,216,167,217,132,216,172,217,132,216,179,216,169),h_yt=string.char(217,134,216,179,216,174,32,217,138,217,136,216,170,217,138,217,136,216,168),h_dc=string.char(217,134,216,179,216,174,32,216,175,217,138,216,179,217,131,217,136,216,177,216,175),h_copied=string.char(216,170,217,133,32,216,167,217,132,217,134,216,179,216,174,33),h_info=string.char(217,133,216,185,217,132,217,136,217,133,216,167,216,170),h_links=string.char(216,167,217,132,216,177,217,136,216,167,216,168,216,183),f_head=string.char(216,172,217,133,216,185,32,216,170,217,132,217,130,216,167,216,166,217,138),f_coin=string.char(216,167,217,132,216,176,217,135,216,167,216,168,32,217,132,216,163,217,130,216,177,216,168,32,216,186,216,177,216,182,32,216,170,217,132,217,130,216,167,216,166,217,138,216,167,217,139),f_range=string.char(217,133,216,175,217,137,32,216,167,217,132,216,168,216,173,216,171),f_height=string.char(216,167,217,132,216,167,216,177,216,170,217,129,216,167,216,185,32,217,129,217,136,217,130,32,216,167,217,132,216,185,217,133,217,132,216,169),f_delay=string.char(216,170,216,163,216,174,217,138,216,177,32,216,167,217,132,216,172,217,133,216,185,32,40,217,133,217,132,217,132,217,138,32,216,171,216,167,217,134,217,138,216,169,41),f_esp=string.char(217,131,216,180,217,129,32,216,167,217,132,216,163,216,186,216,177,216,167,216,182),f_notify=string.char(216,170,217,134,216,168,217,138,217,135,32,216,186,216,177,216,182,32,217,134,216,167,216,175,216,177),f_rare=string.char(217,131,217,132,217,133,216,169,32,216,167,217,132,216,186,216,177,216,182,32,216,167,217,132,217,134,216,167,216,175,216,177,32,40,217,133,216,171,217,132,32,68,105,97,109,111,110,100,41),c_head=string.char(216,167,217,132,216,165,217,134,217,130,216,167,216,176),c_knifeesp=string.char(217,131,216,180,217,129,32,216,167,217,132,216,163,216,183,217,129,216,167,217,132,32,47,32,216,167,217,132,216,181,217,134,216,167,216,175,217,138,217,130),c_tpknife=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132,32,217,132,216,163,217,130,216,177,216,168,32,216,183,217,129,217,132,32,47,32,216,181,217,134,216,175,217,136,217,130),c_none=string.char(217,133,216,167,32,217,132,217,130,217,138,216,170,32,216,180,217,138),p_head=string.char(216,167,217,132,216,173,216,177,217,131,216,169),p_speed_on=string.char(216,179,216,177,216,185,216,169,32,217,133,216,174,216,181,216,181,216,169),p_speed=string.char(216,179,216,177,216,185,216,169,32,216,167,217,132,217,133,216,180,217,138),p_jump_on=string.char(217,130,217,129,216,178,32,217,133,216,174,216,181,216,181),p_jump=string.char(217,130,217,136,216,169,32,216,167,217,132,217,130,217,129,216,178),p_fly=string.char(216,167,217,132,216,183,217,138,216,177,216,167,217,134),p_flyspeed=string.char(216,179,216,177,216,185,216,169,32,216,167,217,132,216,183,217,138,216,177,216,167,217,134),p_noclip=string.char(216,167,216,174,216,170,216,177,216,167,217,130,32,216,167,217,132,216,172,216,175,216,177,216,167,217,134),p_inf=string.char(217,130,217,129,216,178,32,217,132,216,167,32,217,134,217,135,216,167,216,166,217,138),p_afk=string.char(217,133,217,134,216,185,32,216,167,217,132,216,183,216,177,216,175,32,40,65,70,75,41),p_cam=string.char(216,167,217,132,217,131,216,167,217,133,217,138,216,177,216,167),p_fov_on=string.char(216,178,216,167,217,136,217,138,216,169,32,216,177,216,164,217,138,216,169,32,217,133,216,174,216,181,216,181,216,169),p_fov=string.char(216,178,216,167,217,136,217,138,216,169,32,216,167,217,132,216,177,216,164,217,138,216,169),p_grav_on=string.char(216,172,216,167,216,176,216,168,217,138,216,169,32,217,133,216,174,216,181,216,181,216,169),p_grav=string.char(216,167,217,132,216,172,216,167,216,176,216,168,217,138,216,169),t_head=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132),t_tween=string.char(216,179,216,177,216,185,216,169,32,216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132),t_player=string.char(216,167,216,179,217,133,32,216,167,217,132,217,132,216,167,216,185,216,168),t_go=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132,32,217,132,217,132,216,167,216,185,216,168),t_wp=string.char(217,134,217,130,216,167,216,183,32,216,167,217,132,216,173,217,129,216,184),t_wp_name=string.char(216,167,216,179,217,133,32,216,167,217,132,217,134,217,130,216,183,216,169),t_wp_save=string.char(216,173,217,129,216,184,32,216,167,217,132,217,133,217,131,216,167,217,134,32,216,167,217,132,216,173,216,167,217,132,217,138),t_wp_go=string.char(216,167,217,132,216,176,217,135,216,167,216,168,32,217,132,217,132,217,134,217,130,216,183,216,169),t_wp_del=string.char(216,173,216,176,217,129,32,216,167,217,132,217,134,217,130,216,183,216,169),t_coin=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132,32,217,132,216,163,217,130,216,177,216,168,32,216,186,216,177,216,182),t_weapon=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132,32,217,132,216,163,217,130,216,177,216,168,32,216,183,217,129,217,132,32,47,32,216,181,217,134,216,175,217,136,217,130),t_click=string.char(216,167,217,134,216,170,217,130,216,167,217,132,32,216,168,217,128,32,67,116,114,108,32,43,32,217,134,217,130,216,177),t_saved=string.char(216,170,217,133,32,216,167,217,132,216,173,217,129,216,184),t_nowp=string.char(217,132,216,167,32,216,170,217,136,216,172,216,175,32,217,134,217,130,216,167,216,183),v_head=string.char(216,167,217,132,217,133,216,177,216,166,217,138,216,167,216,170),v_esp=string.char(217,131,216,180,217,129,32,216,167,217,132,217,132,216,167,216,185,216,168,217,138,217,134),v_dist=string.char(216,163,217,130,216,181,217,137,32,217,133,216,179,216,167,217,129,216,169,32,217,132,217,132,217,131,216,180,217,129),v_full=string.char(216,165,216,182,216,167,216,161,216,169,32,217,131,216,167,217,133,217,132,216,169),v_fog=string.char(216,165,216,178,216,167,217,132,216,169,32,216,167,217,132,216,182,216,168,216,167,216,168),v_fps=string.char(216,177,217,129,216,185,32,216,167,217,132,217,129,216,177,217,138,217,133,216,167,216,170,32,40,217,133,216,177,216,169,32,217,136,216,167,216,173,216,175,216,169,41),s_head=string.char(216,167,217,132,216,179,217,138,216,177,217,129,216,177),s_rejoin=string.char(216,165,216,185,216,167,216,175,216,169,32,216,167,217,132,216,175,216,174,217,136,217,132),s_hop=string.char(216,170,216,168,216,175,217,138,217,132,32,216,167,217,132,216,179,217,138,216,177,217,129,216,177),s_lowhop=string.char(216,179,217,138,216,177,217,129,216,177,32,217,130,217,132,217,138,217,132,32,216,167,217,132,217,132,216,167,216,185,216,168,217,138,217,134),s_copy=string.char(217,134,216,179,216,174,32,74,111,98,73,100),s_join_in=string.char(74,111,98,73,100,32,217,132,217,132,216,175,216,174,217,136,217,132),s_join=string.char(216,175,216,174,217,136,217,132,32,74,111,98,73,100),s_players=string.char(216,167,217,132,217,132,216,167,216,185,216,168,217,136,217,134),kb_menu=string.char(216,165,216,184,217,135,216,167,216,177,47,216,165,216,174,217,129,216,167,216,161,32,216,167,217,132,217,130,216,167,216,166,217,133,216,169),kb_fly=string.char(216,170,216,180,216,186,217,138,217,132,32,216,167,217,132,216,183,217,138,216,177,216,167,217,134),kb_noclip=string.char(216,170,216,180,216,186,217,138,217,132,32,216,167,217,132,216,167,216,174,216,170,216,177,216,167,217,130),kb_panic=string.char(216,178,216,177,32,216,167,217,132,216,183,217,136,216,167,216,177,216,166,32,40,216,165,216,186,217,132,216,167,217,130,32,217,131,217,132,32,216,180,217,138,216,161,41),kb_press=string.char(216,167,216,182,216,186,216,183,32,216,178,216,177,216,167,217,139,46,46,46),st_lang=string.char(216,170,216,168,216,175,217,138,217,132,32,216,167,217,132,217,132,216,186,216,169),st_scale=string.char(216,173,216,172,217,133,32,216,167,217,132,217,136,216,167,216,172,217,135,216,169,32,40,37,41),st_save=string.char(216,173,217,129,216,184,32,216,167,217,132,216,165,216,185,216,175,216,167,216,175,216,167,216,170),st_reset=string.char(216,165,216,185,216,167,216,175,216,169,32,216,167,217,132,216,182,216,168,216,183),st_saved=string.char(216,170,217,133,32,216,173,217,129,216,184,32,216,167,217,132,216,165,216,185,216,175,216,167,216,175,216,167,216,170),st_credits=string.char(217,133,216,181,217,134,217,136,216,185,32,216,168,217,132,216,186,216,169,32,76,117,97),st_names=(string.char(216,165,216,176,216,167,32,217,133,217,138,216,178,216,169,32,217,133,216,167,32,216,170,217,132,217,130,217,137,32,216,180,217,138,216,140,32,216,185,216,175,217,145,217,132,32,216,172,216,175,217,136,217,132,32,78,65,77,69,83,32,216,168,216)..string.char(163,216,185,217,132,217,137,32,216,167,217,132,216,179,217,131,216,177,216,168,216,170)),st_warn=(string.char(216,167,217,132,217,133,217,138,216,178,216,167,216,170,32,217,135,217,134,216,167,32,216,168,216,181,216,177,217,138,216,169,47,216,173,216,177,217,131,216,169,47,216,167,217,134,216,170,217,130,216,167,217,132,32,217,129,217,130,216,183,46,32,217)..string.char(133,216,167,32,217,134,216,182,217,133,217,134,32,216,185,216,175,217,133,32,216,167,217,132,216,173,216,184,216,177,32,49,48,48,37,216,140,32,216,167,216,179,216,170,216,174,216,175,217,133,217,135,216,167,32,216,185,217,132,217,137,32,217,133)..string.char(216,179,216,164,217,136,217,132,217,138,216,170,217,131,46)),},}local S={Lang=string.char(69,78),Scale=UIS.TouchEnabled and 80 or 100,Speed=32,Jump=80,FlySpeed=60,FOV=80,Gravity=100,FarmRange=300,FarmHeight=3,ClickDelay=150,TweenSpeed=300,ESPDist=1500,RareWord="",AimFOV=12,Waypoints={},Keys={Menu=string.char(82,105,103,104,116,83,104,105,102,116),Fly=string.char(70),Noclip=string.char(78),Panic=string.char(69,110,100)},}local function T(k)return(L[S.Lang]and L[S.Lang][k])or L.EN[k]or tostring(k)end local function SaveSettings()pcall(function()if writefile then writefile(CONFIG.SettingsFile,HttpService:JSONEncode(S))end end)end local function LoadSettings()pcall(function()if isfile and isfile(CONFIG.SettingsFile)then local d=HttpService:JSONDecode(readfile(CONFIG.SettingsFile))for k,v in pairs(d)do if type(v)==string.char(116,97,98,108,101)and type(S[k])==string.char(116,97,98,108,101)then for k2,v2 in pairs(v)do S[k][k2]=v2 end else S[k]=v end end end end)end local alive,conns,texts,rows,updaters=true,{},{},{},{}local F={}local PLAN=string.char(70,114,101,101)local LIM=CONFIG.Limits.Free local coinsCollected=0 local gui,window,content,pages,pageBtns,curPage=nil,nil,nil,{},{},nil local function Bind(sig,fn)local c=sig:Connect(fn);conns[#conns+1]=c;return c end local function New(cls,props,parent)local o=Instance.new(cls)for k,v in pairs(props or{})do o[k]=v end if parent then o.Parent=parent end return o end local function Round(o,r)New(string.char(85,73,67,111,114,110,101,114),{CornerRadius=UDim.new(0,r or 8)},o);return o end local function Stroke(o,col,th,tr)return New(string.char(85,73,83,116,114,111,107,101),{Color=col or C.accent,Thickness=th or 1.5,Transparency=tr or 0.4},o)end local function Notify(text)pcall(function()StarterGui:SetCore(string.char(83,101,110,100,78,111,116,105,102,105,99,97,116,105,111,110),{Title=CONFIG.Title..string.char(32)..CONFIG.Version,Text=text,Duration=3})end)end local function Txt(parent,key,props,cls)local l=New(cls or string.char(84,101,120,116,76,97,98,101,108),{BackgroundTransparency=1,Text=T(key),TextColor3=C.text,Font=FONT,TextSize=15,TextXAlignment=Enum.TextXAlignment.Left,},parent)for k,v in pairs(props or{})do l[k]=v end texts[#texts+1]={l,key}return l end local function RefreshTexts()for _,t in ipairs(texts)do if t[1].Parent then t[1].Text=T(t[2])end end end local function GuiParent()local ok,h=pcall(function()return gethui and gethui()end)if ok and h then return h end if pcall(function()return CoreGui.Name end)then return CoreGui end return LP:WaitForChild(string.char(80,108,97,121,101,114,71,117,105))end local function Char()return LP.Character end local function HRP()local c=LP.Character;return c and c:FindFirstChild(string.char(72,117,109,97,110,111,105,100,82,111,111,116,80,97,114,116))end local function Hum()local c=LP.Character;return c and c:FindFirstChildOfClass(string.char(72,117,109,97,110,111,105,100))end local function TeleportTo(cf)local hrp=HRP();if not hrp then return end local d=(hrp.Position-cf.Position).Magnitude local t=math.max(d/math.max(S.TweenSpeed,50),0.05)F.Tweening=true local tw=TweenService:Create(hrp,TweenInfo.new(t,Enum.EasingStyle.Linear),{CFrame=cf})tw.Completed:Connect(function()F.Tweening=false end)tw:Play()return tw end local function FindFolders(names)local found={}for _,n in ipairs(names)do local f=workspace:FindFirstChild(n,true)if f then found[#found+1]=f end end return found end local function PartPos(inst)if inst:IsA(string.char(66,97,115,101,80,97,114,116))then return inst.Position end if inst:IsA(string.char(77,111,100,101,108))then local ok,cf=pcall(function()return inst:GetPivot()end)if ok then return cf.Position end local pp=inst.PrimaryPart or inst:FindFirstChildWhichIsA(string.char(66,97,115,101,80,97,114,116),true)if pp then return pp.Position end end return nil end local coinFolderCache,coinFolderT={},0 local function CoinFolders()if os.clock()-coinFolderT>5 or#coinFolderCache==0 then coinFolderT=os.clock()coinFolderCache=FindFolders(NAMES.CoinFolders)end return coinFolderCache end local function CoinList()local t={}local folders=CoinFolders()if#folders>0 then for _,folder in ipairs(folders)do for _,o in ipairs(folder:GetChildren())do if(o:IsA(string.char(66,97,115,101,80,97,114,116))or o:IsA(string.char(77,111,100,101,108)))and tostring(o.Name):find(NAMES.CoinNamePart,1,true)then t[#t+1]=o end end end elseif NAMES.CoinNamePart~=""then for _,o in ipairs(workspace:GetDescendants())do if(o:IsA(string.char(66,97,115,101,80,97,114,116))or o:IsA(string.char(77,111,100,101,108)))and tostring(o.Name):find(NAMES.CoinNamePart)then t[#t+1]=o end end end return t end local function NearestCoin(range)local hrp=HRP();if not hrp then return end local best,bd for _,o in ipairs(CoinList())do local pos=PartPos(o)if pos then local d=(pos-hrp.Position).Magnitude if(not range or d<=range)and(not bd or d<bd)then best,bd=o,d end end end return best,bd end local dropCache,dropT={},0 local function DropList()if os.clock()-dropT>2 then dropT=os.clock()dropCache={}local folders=FindFolders(NAMES.DropFolders)local scan=function(root)for _,o in ipairs(root:GetDescendants())do if o:IsA(string.char(66,97,115,101,80,97,114,116))or o:IsA(string.char(77,111,100,101,108))then local nm=tostring(o.Name)for _,part in ipairs(NAMES.DropNameParts)do if nm:find(part)then dropCache[#dropCache+1]=o break end end end end end if#folders>0 then for _,f in ipairs(folders)do scan(f)end else scan(workspace)end end return dropCache end local function NearestDrop(range)local hrp=HRP();if not hrp then return end local best,bd for _,o in ipairs(DropList())do if o.Parent then local pos=PartPos(o)if pos then local d=(pos-hrp.Position).Magnitude if(not range or d<=range)and(not bd or d<bd)then best,bd=o,d end end end end return best,bd end local function TryTouch(inst)local part=inst:IsA(string.char(66,97,115,101,80,97,114,116))and inst or(inst.PrimaryPart or inst:FindFirstChildWhichIsA(string.char(66,97,115,101,80,97,114,116),true))if not part then return end local prompt=inst:FindFirstChildWhichIsA(string.char(80,114,111,120,105,109,105,116,121,80,114,111,109,112,116),true)if prompt then pcall(function()fireproximityprompt(prompt)end)return end local hrp=HRP()if hrp then pcall(function()firetouchinterest(hrp,part,0)end)pcall(function()firetouchinterest(hrp,part,1)end)end end local espObjs={player={},coin={},drop={}}local function ClearESP(group)for _,o in ipairs(espObjs[group])do pcall(function()o:Destroy()end)end espObjs[group]={}end local function Tag(group,target,adornee,color,text)local hl=New(string.char(72,105,103,104,108,105,103,104,116),{Adornee=target,FillColor=color,OutlineColor=Color3.new(1,1,1),FillTransparency=0.6,DepthMode=Enum.HighlightDepthMode.AlwaysOnTop,},gui)local bb=New(string.char(66,105,108,108,98,111,97,114,100,71,117,105),{Adornee=adornee,Size=UDim2.fromOffset(150,20),StudsOffset=Vector3.new(0,3,0),AlwaysOnTop=true,},gui)local lbl=New(string.char(84,101,120,116,76,97,98,101,108),{Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,Text=text,TextColor3=color,Font=FONT,TextSize=14,TextStrokeTransparency=0.4,},bb)table.insert(espObjs[group],hl);table.insert(espObjs[group],bb)return lbl end local function ShowPage(name)curPage=name for n,p in pairs(pages)do p.Visible=(n==name)end for n,b in pairs(pageBtns)do b.BackgroundColor3=(n==name)and C.accent or C.item b.BackgroundTransparency=(n==name)and 0.2 or 0.5 end end local function Page(name)local p=New(string.char(83,99,114,111,108,108,105,110,103,70,114,97,109,101),{Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=3,ScrollBarImageColor3=C.accent,CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,Visible=false,},content)New(string.char(85,73,76,105,115,116,76,97,121,111,117,116),{Padding=UDim.new(0,6),SortOrder=Enum.SortOrder.LayoutOrder},p)New(string.char(85,73,80,97,100,100,105,110,103),{PaddingRight=UDim.new(0,6),PaddingBottom=UDim.new(0,6)},p)pages[name]=p;curPage=name return p end local building local function AddRow(h,key,header)local f=New(string.char(70,114,97,109,101),{Size=UDim2.new(1,0,0,h),BackgroundColor3=C.item,BackgroundTransparency=header and 1 or 0,BorderSizePixel=0,},pages[building])if not header then Round(f,8)end rows[#rows+1]={f=f,page=building,key=key or"",header=header}return f end local function Header(key)local f=AddRow(24,key,true)Txt(f,key,{Size=UDim2.new(1,-8,1,0),Position=UDim2.new(0,4,0,0),TextColor3=C.gold,TextSize=14})end local function Info(fn)local f=AddRow(30,"")local l=New(string.char(84,101,120,116,76,97,98,101,108),{Size=UDim2.new(1,-20,1,0),Position=UDim2.new(0,12,0,0),BackgroundTransparency=1,Text="",TextColor3=C.text,Font=FONT,TextSize=15,TextXAlignment=Enum.TextXAlignment.Left,},f)updaters[#updaters+1]=function()l.Text=fn()end l.Text=fn()end local function Toggle(key,cb)local f=AddRow(36,key)Txt(f,key,{Size=UDim2.new(1,-70,1,0),Position=UDim2.new(0,12,0,0)})local sw=New(string.char(84,101,120,116,66,117,116,116,111,110),{Text="",Size=UDim2.fromOffset(42,22),Position=UDim2.new(1,-54,0.5,-11),BackgroundColor3=C.off,AutoButtonColor=false,},f);Round(sw,11)local dot=New(string.char(70,114,97,109,101),{Size=UDim2.fromOffset(16,16),Position=UDim2.new(0,3,0.5,-8),BackgroundColor3=C.text},sw);Round(dot,8)local state=false local function set(v)state=v TweenService:Create(sw,TweenInfo.new(0.15),{BackgroundColor3=v and C.accent or C.off}):Play()TweenService:Create(dot,TweenInfo.new(0.15),{Position=v and UDim2.new(1,-19,0.5,-8)or UDim2.new(0,3,0.5,-8)}):Play()task.spawn(cb,v)end sw.MouseButton1Click:Connect(function()set(not state)end)return set,function()return state end end local function Slider(key,id,min,max,cb)local f=AddRow(52,key)Txt(f,key,{Size=UDim2.new(1,-80,0,24),Position=UDim2.new(0,12,0,2)})local val=New(string.char(84,101,120,116,76,97,98,101,108),{Size=UDim2.fromOffset(60,24),Position=UDim2.new(1,-72,0,2),BackgroundTransparency=1,Text="",TextColor3=C.gold,Font=FONT,TextSize=15,TextXAlignment=Enum.TextXAlignment.Right,},f)local bar=New(string.char(70,114,97,109,101),{Size=UDim2.new(1,-24,0,8),Position=UDim2.new(0,12,0,34),BackgroundColor3=C.off,BorderSizePixel=0},f);Round(bar,4)local fill=New(string.char(70,114,97,109,101),{Size=UDim2.new(0,0,1,0),BackgroundColor3=C.accent,BorderSizePixel=0},bar);Round(fill,4)local function setv(v)v=math.clamp(math.floor(v+0.5),min,max)S[id]=v fill.Size=UDim2.new((v-min)/math.max(max-min,1),0,1,0)val.Text=tostring(v)if cb then cb(v)end end local dragging=false local function fromInput(i)setv(min+(max-min)*math.clamp((i.Position.X-bar.AbsolutePosition.X)/math.max(bar.AbsoluteSize.X,1),0,1))end bar.InputBegan:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then dragging=true;fromInput(i)end end)Bind(UIS.InputChanged,function(i)if dragging and(i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch)then fromInput(i)end end)Bind(UIS.InputEnded,function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then dragging=false end end)setv(math.clamp(S[id]or min,min,max))return setv end local function Button(key,cb,col)local f=AddRow(34,key)local b=New(string.char(84,101,120,116,66,117,116,116,111,110),{Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,Text=T(key),TextColor3=col or C.text,Font=FONT,TextSize=15,},f)texts[#texts+1]={b,key}b.MouseEnter:Connect(function()f.BackgroundColor3=C.hover end)b.MouseLeave:Connect(function()f.BackgroundColor3=C.item end)b.MouseButton1Click:Connect(function()task.spawn(cb,b)end)return f,b end local function Input(key,placeholder,default)local f=AddRow(36,key)Txt(f,key,{Size=UDim2.new(0.45,0,1,0),Position=UDim2.new(0,12,0,0)})local box=New(string.char(84,101,120,116,66,111,120),{Size=UDim2.new(0.5,-12,0,26),Position=UDim2.new(0.5,0,0.5,-13),BackgroundColor3=C.panel,Text=default or"",PlaceholderText=placeholder or"",TextColor3=C.text,PlaceholderColor3=C.sub,Font=FONT,TextSize=14,ClearTextOnFocus=false,},f);Round(box,6)return box end local rebinding local function Keybind(key,id,action)local f=AddRow(36,key)Txt(f,key,{Size=UDim2.new(0.6,0,1,0),Position=UDim2.new(0,12,0,0)})local b=New(string.char(84,101,120,116,66,117,116,116,111,110),{Size=UDim2.new(0.3,0,0,26),Position=UDim2.new(0.7,-12,0.5,-13),BackgroundColor3=C.panel,Text=S.Keys[id],TextColor3=C.gold,Font=FONT,TextSize=14,},f);Round(b,6)b.MouseButton1Click:Connect(function()b.Text=T(string.char(107,98,95,112,114,101,115,115))rebinding=function(name)S.Keys[id]=name;b.Text=name end end)updaters[#updaters+1]=function()if not rebinding and b.Text~=S.Keys[id]then b.Text=S.Keys[id]end end return action end local flyBV,flyBG local function StopFly()if flyBV then flyBV:Destroy();flyBV=nil end if flyBG then flyBG:Destroy();flyBG=nil end end local function EnsureFly()local hrp=HRP();if not hrp then return false end if not flyBV or flyBV.Parent~=hrp then StopFly()flyBV=New(string.char(66,111,100,121,86,101,108,111,99,105,116,121),{MaxForce=Vector3.new(9e9,9e9,9e9),Velocity=Vector3.zero},hrp)flyBG=New(string.char(66,111,100,121,71,121,114,111),{MaxTorque=Vector3.new(9e9,9e9,9e9),P=9e4,CFrame=hrp.CFrame},hrp)end return true end local origLight={Brightness=Lighting.Brightness,ClockTime=Lighting.ClockTime,FogEnd=Lighting.FogEnd,GlobalShadows=Lighting.GlobalShadows,Ambient=Lighting.Ambient,OutdoorAmbient=Lighting.OutdoorAmbient,}local function RestoreLight()for k,v in pairs(origLight)do pcall(function()Lighting[k]=v end)end end local fps,startT=60,os.clock()Bind(RunService.RenderStepped,function(dt)fps=fps*0.9+(1/math.max(dt,1e-4))*0.1 end)Bind(RunService.Heartbeat,function()local hum,hrp,cam=Hum(),HRP(),workspace.CurrentCamera if hum then if F.Speed then hum.WalkSpeed=S.Speed end if F.Jump then hum.UseJumpPower=true;hum.JumpPower=S.Jump end end if F.Grav then workspace.Gravity=S.Gravity end if F.FOV and cam then cam.FieldOfView=S.FOV end if F.Fly and hum and hrp and EnsureFly()then local dir=hum.MoveDirection local up=(UIS:IsKeyDown(Enum.KeyCode.Space)and 1 or 0)-(UIS:IsKeyDown(Enum.KeyCode.LeftControl)and 1 or 0)local vel=dir*S.FlySpeed+Vector3.new(0,up*S.FlySpeed,0)local look=cam.CFrame.LookVector local flat=Vector3.new(look.X,0,look.Z)if dir.Magnitude>0 and flat.Magnitude>0 then vel=vel+Vector3.new(0,look.Y*dir:Dot(flat.Unit)*S.FlySpeed,0)end flyBV.Velocity=vel flyBG.CFrame=cam.CFrame end if F.Farm and hrp then local coin=NearestCoin(S.FarmRange)if coin then local pos=PartPos(coin)if pos then hrp.CFrame=CFrame.new(pos+Vector3.new(0,S.FarmHeight,0),pos)hrp.AssemblyLinearVelocity=Vector3.zero end end end if F.Full then Lighting.Brightness=2;Lighting.ClockTime=14;Lighting.GlobalShadows=false Lighting.Ambient=Color3.fromRGB(178,178,178);Lighting.OutdoorAmbient=Color3.fromRGB(178,178,178)end if F.Fog then Lighting.FogEnd=9e9 local a=Lighting:FindFirstChildOfClass(string.char(65,116,109,111,115,112,104,101,114,101));if a then a.Density=0 end end end)Bind(RunService.Stepped,function()if(F.Noclip or F.Farm or F.Tweening or F.Fly)and Char()then for _,p in ipairs(Char():GetDescendants())do if p:IsA(string.char(66,97,115,101,80,97,114,116))then p.CanCollide=false end end end end)Bind(UIS.JumpRequest,function()if F.InfJump then local h=Hum();if h then h:ChangeState(Enum.HumanoidStateType.Jumping)end end end)Bind(LP.Idled,function()if F.AFK then pcall(function()VirtualUser:CaptureController();VirtualUser:ClickButton2(Vector2.new())end)end end)Bind(UIS.InputBegan,function(i,gp)if gp or not F.ClickTP then return end if i.UserInputType==Enum.UserInputType.MouseButton1 and UIS:IsKeyDown(Enum.KeyCode.LeftControl)then local m=LP:GetMouse()if m.Hit then TeleportTo(CFrame.new(m.Hit.Position+Vector3.new(0,4,0)))end end end)local grabbed={}task.spawn(function()while alive do if F.Farm then local coin,d=NearestCoin(S.FarmRange)if coin and d and d<8 and not grabbed[coin]then grabbed[coin]=true TryTouch(coin)coinsCollected=coinsCollected+1 task.delay(2,function()grabbed[coin]=nil end)end end task.wait(math.max(S.ClickDelay,50)/1000)end end)local notified={}task.spawn(function()while alive do local coins=CoinList()if F.CoinESP then ClearESP(string.char(99,111,105,110))for _,o in ipairs(coins)do local isRare=S.RareWord~=""and tostring(o.Name):lower():find(tostring(S.RareWord):lower(),1,true)Tag(string.char(99,111,105,110),o,(o:IsA(string.char(66,97,115,101,80,97,114,116))and o)or(o.PrimaryPart or o:FindFirstChildWhichIsA(string.char(66,97,115,101,80,97,114,116),true)),isRare and C.gold or C.blue,o.Name)end end if F.CoinNotify then for _,o in ipairs(coins)do if S.RareWord~=""and tostring(o.Name):lower():find(tostring(S.RareWord):lower(),1,true)and not notified[o]then notified[o]=true;Notify(o.Name)end end end task.wait(1.2)end end)task.spawn(function()while alive do if F.DropESP then ClearESP(string.char(100,114,111,112))for _,o in ipairs(DropList())do if o.Parent then Tag(string.char(100,114,111,112),o,(o:IsA(string.char(66,97,115,101,80,97,114,116))and o)or(o.PrimaryPart or o:FindFirstChildWhichIsA(string.char(66,97,115,101,80,97,114,116),true)),C.accent,o.Name)end end end task.wait(1)end end)task.spawn(function()while alive do if F.PlayerESP then ClearESP(string.char(112,108,97,121,101,114))local hrp=HRP()for _,pl in ipairs(Players:GetPlayers())do if pl~=LP and pl.Character and pl.Character:FindFirstChild(string.char(72,101,97,100))and hrp then local d=(pl.Character.Head.Position-hrp.Position).Magnitude if d<=S.ESPDist then local tn=pl.Team and pl.Team.Name or string.char(63)local label=pl.Name..string.char(32,91)..tn..string.char(93,32)..math.floor(d)..string.char(109)Tag(string.char(112,108,97,121,101,114),pl.Character,pl.Character.Head,(pl.Team and pl.Team.TeamColor and pl.Team.TeamColor.Color)or C.blue,label)end end end end task.wait(0.7)end end)task.spawn(function()while alive do for _,u in ipairs(updaters)do pcall(u)end task.wait(0.5)end end)local function Hop(lowPop)Notify(string.char(46,46,46))local ok,data=pcall(function()local url=((string.char(104,116,116,112,115,58,47,47,103,97,109,101,115,46,114,111,98,108,111,120,46,99,111,109,47,118,49,47,103,97,109,101,115,47,37,100,47,115,101,114,118,101,114,115,47,80,117,98,108,105,99,63,115,111,114,116,79,114,100,101,114,61,37,115)..string.char(38,108,105,109,105,116,61,49,48,48))):format(game.PlaceId,lowPop and string.char(65,115,99)or string.char(68,101,115,99))return HttpService:JSONDecode(game:HttpGet(url))end)if not ok or not data or not data.data then return Notify(string.char(72,84,84,80,32,101,114,114,111,114))end for _,s in ipairs(data.data)do if s.id~=game.JobId and s.playing<s.maxPlayers then TeleportSvc:TeleportToPlaceInstance(game.PlaceId,s.id,LP)return end end end local function Copy(text)if setclipboard then setclipboard(text);Notify(T(string.char(104,95,99,111,112,105,101,100)))else Notify(string.char(69,120,101,99,117,116,111,114,32,104,97,115,32,110,111,32,99,108,105,112,98,111,97,114,100))end end local function Cleanup()alive=false for _,c in ipairs(conns)do pcall(function()c:Disconnect()end)end StopFly()ClearESP(string.char(112,108,97,121,101,114));ClearESP(string.char(99,111,105,110));ClearESP(string.char(100,114,111,112))RestoreLight()pcall(function()local h=Hum();if h then h.WalkSpeed=16;h.JumpPower=50 end workspace.Gravity=196.2 workspace.CurrentCamera.FieldOfView=70 end)if gui then gui:Destroy()end end if getgenv then getgenv().NNHub_Cleanup=Cleanup end local function BuildMain()local sc local mini=New(string.char(84,101,120,116,66,117,116,116,111,110),{Size=UDim2.fromOffset(44,44),Position=UDim2.new(0,12,0.5,-22),BackgroundColor3=C.bg,Text=string.char(57,57),TextColor3=C.gold,Font=Enum.Font.SourceSansBold,TextSize=13,AutoButtonColor=true,},gui);Round(mini,22);Stroke(mini)window=New(string.char(70,114,97,109,101),{Size=UDim2.fromOffset(640,390),AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),BackgroundColor3=C.bg,BorderSizePixel=0,},gui);Round(window,14);Stroke(window)sc=New(string.char(85,73,83,99,97,108,101),{Scale=S.Scale/100},window)mini.MouseButton1Click:Connect(function()window.Visible=not window.Visible end)local top=New(string.char(70,114,97,109,101),{Size=UDim2.new(1,0,0,42),BackgroundColor3=C.panel,BorderSizePixel=0},window);Round(top,14)New(string.char(84,101,120,116,76,97,98,101,108),{Size=UDim2.new(0,150,1,0),Position=UDim2.new(0,14,0,0),BackgroundTransparency=1,Text=CONFIG.Title..string.char(32)..CONFIG.Version,TextColor3=C.gold,Font=Enum.Font.SourceSansBold,TextSize=19,TextXAlignment=Enum.TextXAlignment.Left,},top)local search=New(string.char(84,101,120,116,66,111,120),{Size=UDim2.new(0,220,0,28),Position=UDim2.new(0.5,-100,0.5,-14),BackgroundColor3=C.item,Text="",PlaceholderText=T(string.char(115,101,97,114,99,104)),PlaceholderColor3=C.sub,TextColor3=C.text,Font=FONT,TextSize=14,ClearTextOnFocus=false,},top);Round(search,8)local function topBtn(txt,x,col)return New(string.char(84,101,120,116,66,117,116,116,111,110),{Size=UDim2.fromOffset(28,28),Position=UDim2.new(1,x,0.5,-14),BackgroundColor3=col,Text=txt,TextColor3=C.text,Font=Enum.Font.SourceSansBold,TextSize=16,},top)end local bClose=topBtn(string.char(88),-36,C.red);Round(bClose,8)local bMin=topBtn(string.char(45),-70,C.item);Round(bMin,8)local bLang=topBtn(string.char(65),-104,C.item);Round(bLang,8)bClose.MouseButton1Click:Connect(Cleanup)bMin.MouseButton1Click:Connect(function()window.Visible=false end)local dragging,dStart,dPos top.InputBegan:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then dragging,dStart,dPos=true,i.Position,window.Position end end)Bind(UIS.InputChanged,function(i)if dragging and(i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch)then local d=(i.Position-dStart)/sc.Scale window.Position=UDim2.new(dPos.X.Scale,dPos.X.Offset+d.X,dPos.Y.Scale,dPos.Y.Offset+d.Y)end end)Bind(UIS.InputEnded,function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then dragging=false end end)local side=New(string.char(83,99,114,111,108,108,105,110,103,70,114,97,109,101),{Size=UDim2.new(0,150,1,-52),Position=UDim2.new(0,8,0,48),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=0,CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,},window)New(string.char(85,73,76,105,115,116,76,97,121,111,117,116),{Padding=UDim.new(0,5),SortOrder=Enum.SortOrder.LayoutOrder},side)content=New(string.char(70,114,97,109,101),{Size=UDim2.new(1,-176,1,-56),Position=UDim2.new(0,166,0,50),BackgroundTransparency=1},window)local ORDER={{string.char(71,95,77,65,73,78)},{string.char(72,79,77,69)},{string.char(70,65,82,77)},{string.char(67,79,77,66,65,84)},{string.char(71,95,71,65,77,69)},{string.char(80,76,65,89,69,82)},{string.char(84,69,76,69,80,79,82,84)},{string.char(86,73,83,85,65,76,83)},{string.char(83,69,82,86,69,82)},{string.char(71,95,83,89,83,84,69,77)},{string.char(75,69,89,83)},{string.char(83,69,84,84,73,78,71,83)},}for _,e in ipairs(ORDER)do local k=e[1]if k:sub(1,2)==string.char(71,95)then Txt(side,k,{Size=UDim2.new(1,0,0,20),TextColor3=C.sub,TextSize=12})else local b=New(string.char(84,101,120,116,66,117,116,116,111,110),{Size=UDim2.new(1,0,0,32),BackgroundColor3=C.item,BackgroundTransparency=0.5,Text=T(k),TextColor3=C.text,Font=FONT,TextSize=15,AutoButtonColor=false,},side);Round(b,8)texts[#texts+1]={b,k}pageBtns[k]=b b.MouseButton1Click:Connect(function()ShowPage(k)end)end end Page(string.char(72,79,77,69));building=string.char(72,79,77,69)Header(string.char(104,95,105,110,102,111))Info(function()return T(string.char(104,95,119,101,108,99,111,109,101))..string.char(44,32)..LP.DisplayName end)Info(function()return T(string.char(104,95,112,108,97,110))..string.char(58,32)..PLAN end)Info(function()return string.char(80,105,99,107,117,112,115,58,32)..coinsCollected end)Info(function()return T(string.char(104,95,102,112,115))..string.char(58,32)..math.floor(fps)end)Info(function()local p=string.char(63)pcall(function()p=math.floor(Stats.Network.ServerStatsItem[string.char(68,97,116,97,32,80,105,110,103)]:GetValue())end)return T(string.char(104,95,112,105,110,103))..string.char(58,32)..p..string.char(32,109,115)end)Info(function()local s=math.floor(os.clock()-startT)return T(string.char(104,95,117,112))..string.char(58,32)..string.format(string.char(37,48,50,100,58,37,48,50,100,58,37,48,50,100),math.floor(s/3600),math.floor((s%3600)/60),s%60)end)Header(string.char(104,95,108,105,110,107,115))Button(string.char(104,95,121,116),function()Copy(CONFIG.Youtube)end)Button(string.char(104,95,100,99),function()Copy(CONFIG.Discord)end)Info(function()return T(string.char(115,116,95,119,97,114,110))end)Page(string.char(70,65,82,77));building=string.char(70,65,82,77)Header(string.char(102,95,104,101,97,100))Toggle(string.char(102,95,99,111,105,110),function(v)F.Farm=v end)Slider(string.char(102,95,114,97,110,103,101),string.char(70,97,114,109,82,97,110,103,101),50,2000)Slider(string.char(102,95,104,101,105,103,104,116),string.char(70,97,114,109,72,101,105,103,104,116),1,20)Slider(string.char(102,95,100,101,108,97,121),string.char(67,108,105,99,107,68,101,108,97,121),50,2000)Toggle(string.char(102,95,101,115,112),function(v)F.CoinESP=v;if not v then ClearESP(string.char(99,111,105,110))end end)local rbox=Input(string.char(102,95,114,97,114,101),string.char(78,97,109,101,46,46,46),S.RareWord)rbox.FocusLost:Connect(function()S.RareWord=rbox.Text end)Toggle(string.char(102,95,110,111,116,105,102,121),function(v)F.CoinNotify=v end)Info(function()return T(string.char(115,116,95,110,97,109,101,115))end)Page(string.char(67,79,77,66,65,84));building=string.char(67,79,77,66,65,84)Header(string.char(99,95,104,101,97,100))Toggle(string.char(99,95,107,110,105,102,101,101,115,112),function(v)F.DropESP=v;if not v then ClearESP(string.char(100,114,111,112))end end)Button(string.char(99,95,116,112,107,110,105,102,101),function()local d=NearestDrop()if d then local pos=PartPos(d)if pos then TeleportTo(CFrame.new(pos+Vector3.new(0,3,0)))end else Notify(T(string.char(99,95,110,111,110,101)))end end)Info(function()return T(string.char(115,116,95,119,97,114,110))end)Page(string.char(80,76,65,89,69,82));building=string.char(80,76,65,89,69,82)Header(string.char(112,95,104,101,97,100))Toggle(string.char(112,95,115,112,101,101,100,95,111,110),function(v)F.Speed=v;if not v then local h=Hum();if h then h.WalkSpeed=16 end end end)Slider(string.char(112,95,115,112,101,101,100),string.char(83,112,101,101,100),16,LIM.speed)Toggle(string.char(112,95,106,117,109,112,95,111,110),function(v)F.Jump=v;if not v then local h=Hum();if h then h.JumpPower=50 end end end)Slider(string.char(112,95,106,117,109,112),string.char(74,117,109,112),50,LIM.jump)local setFly=Toggle(string.char(112,95,102,108,121),function(v)F.Fly=v;if not v then StopFly()end end)Slider(string.char(112,95,102,108,121,115,112,101,101,100),string.char(70,108,121,83,112,101,101,100),20,LIM.fly)local setNoclip=Toggle(string.char(112,95,110,111,99,108,105,112),function(v)F.Noclip=v end)Toggle(string.char(112,95,105,110,102),function(v)F.InfJump=v end)Toggle(string.char(112,95,97,102,107),function(v)F.AFK=v end)Header(string.char(112,95,99,97,109))Toggle(string.char(112,95,102,111,118,95,111,110),function(v)F.FOV=v;if not v then workspace.CurrentCamera.FieldOfView=70 end end)Slider(string.char(112,95,102,111,118),string.char(70,79,86),40,120)Toggle(string.char(112,95,103,114,97,118,95,111,110),function(v)F.Grav=v;if not v then workspace.Gravity=196.2 end end)Slider(string.char(112,95,103,114,97,118),string.char(71,114,97,118,105,116,121),20,300)Page(string.char(84,69,76,69,80,79,82,84));building=string.char(84,69,76,69,80,79,82,84)Header(string.char(116,95,104,101,97,100))Slider(string.char(116,95,116,119,101,101,110),string.char(84,119,101,101,110,83,112,101,101,100),100,600)local pbox=Input(string.char(116,95,112,108,97,121,101,114),string.char(78,97,109,101,46,46,46))Button(string.char(116,95,103,111),function()local q=pbox.Text:lower()if q==""then return end for _,pl in ipairs(Players:GetPlayers())do if pl~=LP and(pl.Name:lower():find(q,1,true)or pl.DisplayName:lower():find(q,1,true))then local r=pl.Character and pl.Character:FindFirstChild(string.char(72,117,109,97,110,111,105,100,82,111,111,116,80,97,114,116))if r then TeleportTo(r.CFrame+Vector3.new(0,3,0))end return end end end)Button(string.char(116,95,99,111,105,110),function()local coin=NearestCoin()if coin then local pos=PartPos(coin)if pos then TeleportTo(CFrame.new(pos+Vector3.new(0,3,0)))end end end)Button(string.char(116,95,119,101,97,112,111,110),function()local d=NearestDrop()if d then local pos=PartPos(d)if pos then TeleportTo(CFrame.new(pos+Vector3.new(0,3,0)))end else Notify(T(string.char(99,95,110,111,110,101)))end end)Toggle(string.char(116,95,99,108,105,99,107),function(v)F.ClickTP=v end)Header(string.char(116,95,119,112))Info(function()local n={}for k in pairs(S.Waypoints)do n[#n+1]=k end table.sort(n)return#n>0 and table.concat(n,string.char(44,32))or T(string.char(116,95,110,111,119,112))end)local wbox=Input(string.char(116,95,119,112,95,110,97,109,101),string.char(83,112,97,119,110,32,49))Button(string.char(116,95,119,112,95,115,97,118,101),function()local hrp=HRP()if hrp and wbox.Text~=""then local p=hrp.Position S.Waypoints[wbox.Text]={p.X,p.Y,p.Z}SaveSettings();Notify(T(string.char(116,95,115,97,118,101,100)))end end)Button(string.char(116,95,119,112,95,103,111),function()local w=S.Waypoints[wbox.Text]if w then TeleportTo(CFrame.new(w[1],w[2],w[3]))end end)Button(string.char(116,95,119,112,95,100,101,108),function()S.Waypoints[wbox.Text]=nil;SaveSettings()end,C.red)Page(string.char(86,73,83,85,65,76,83));building=string.char(86,73,83,85,65,76,83)Header(string.char(118,95,104,101,97,100))Toggle(string.char(118,95,101,115,112),function(v)F.PlayerESP=v;if not v then ClearESP(string.char(112,108,97,121,101,114))end end)Slider(string.char(118,95,100,105,115,116),string.char(69,83,80,68,105,115,116),100,5000)Toggle(string.char(118,95,102,117,108,108),function(v)F.Full=v;if not v then RestoreLight()end end)Toggle(string.char(118,95,102,111,103),function(v)F.Fog=v;if not v then Lighting.FogEnd=origLight.FogEnd end end)Button(string.char(118,95,102,112,115),function()Lighting.GlobalShadows=false pcall(function()settings().Rendering.QualityLevel=Enum.QualityLevel.Level01 end)local n=0 for _,d in ipairs(workspace:GetDescendants())do if d:IsA(string.char(80,97,114,116,105,99,108,101,69,109,105,116,116,101,114))or d:IsA(string.char(84,114,97,105,108))then d.Enabled=false elseif d:IsA(string.char(68,101,99,97,108))or d:IsA(string.char(84,101,120,116,117,114,101))then d.Transparency=1 end n=n+1;if n%400==0 then task.wait()end end end)Page(string.char(83,69,82,86,69,82));building=string.char(83,69,82,86,69,82)Header(string.char(115,95,104,101,97,100))Info(function()return T(string.char(115,95,112,108,97,121,101,114,115))..string.char(58,32)..#Players:GetPlayers()..string.char(32,47,32)..Players.MaxPlayers end)Button(string.char(115,95,114,101,106,111,105,110),function()TeleportSvc:TeleportToPlaceInstance(game.PlaceId,game.JobId,LP)end)Button(string.char(115,95,104,111,112),function()Hop(false)end)Button(string.char(115,95,108,111,119,104,111,112),function()Hop(true)end)Button(string.char(115,95,99,111,112,121),function()Copy(game.JobId)end)local jbox=Input(string.char(115,95,106,111,105,110,95,105,110),string.char(74,111,98,73,100,46,46,46))Button(string.char(115,95,106,111,105,110),function()if jbox.Text~=""then TeleportSvc:TeleportToPlaceInstance(game.PlaceId,jbox.Text,LP)end end)Page(string.char(75,69,89,83));building=string.char(75,69,89,83)local actions={}actions.Menu=Keybind(string.char(107,98,95,109,101,110,117),string.char(77,101,110,117),function()window.Visible=not window.Visible end)actions.Fly=Keybind(string.char(107,98,95,102,108,121),string.char(70,108,121),function()setFly(not F.Fly)end)actions.Noclip=Keybind(string.char(107,98,95,110,111,99,108,105,112),string.char(78,111,99,108,105,112),function()setNoclip(not F.Noclip)end)actions.Panic=Keybind(string.char(107,98,95,112,97,110,105,99),string.char(80,97,110,105,99),Cleanup)Bind(UIS.InputBegan,function(i,gp)if i.UserInputType~=Enum.UserInputType.Keyboard then return end if rebinding then local fn=rebinding;rebinding=nil fn(i.KeyCode.Name)return end if gp then return end for id,fn in pairs(actions)do if S.Keys[id]==i.KeyCode.Name then fn()end end end)Page(string.char(83,69,84,84,73,78,71,83));building=string.char(83,69,84,84,73,78,71,83)Button(string.char(115,116,95,108,97,110,103),function()S.Lang=(S.Lang==string.char(69,78))and string.char(65,82)or string.char(69,78)RefreshTexts();search.PlaceholderText=T(string.char(115,101,97,114,99,104))end)Slider(string.char(115,116,95,115,99,97,108,101),string.char(83,99,97,108,101),50,150,function(v)sc.Scale=v/100 end)Button(string.char(115,116,95,115,97,118,101),function()SaveSettings();Notify(T(string.char(115,116,95,115,97,118,101,100)))end)Button(string.char(115,116,95,114,101,115,101,116),function()pcall(function()if delfile and isfile(CONFIG.SettingsFile)then delfile(CONFIG.SettingsFile)end end)Notify(string.char(79,75))end,C.red)Info(function()return T(string.char(115,116,95,99,114,101,100,105,116,115))end)bLang.MouseButton1Click:Connect(function()S.Lang=(S.Lang==string.char(69,78))and string.char(65,82)or string.char(69,78)RefreshTexts();search.PlaceholderText=T(string.char(115,101,97,114,99,104))end)search:GetPropertyChangedSignal(string.char(84,101,120,116)):Connect(function()local q=search.Text:lower()local first for _,r in ipairs(rows)do local hit=q==""or T(r.key):lower():find(q,1,true)or(L.EN[r.key]or""):lower():find(q,1,true)r.f.Visible=hit and true or false if hit and q~=""and not first and not r.header then first=r.page end end if first then ShowPage(first)end end)ShowPage(string.char(72,79,77,69))end local function Loading(done)local f=New(string.char(70,114,97,109,101),{Size=UDim2.fromOffset(380,130),AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),BackgroundColor3=C.bg,BorderSizePixel=0,},gui);Round(f,14);Stroke(f)New(string.char(84,101,120,116,76,97,98,101,108),{Size=UDim2.new(1,0,0,36),Position=UDim2.new(0,0,0,12),BackgroundTransparency=1,Text=CONFIG.Title..string.char(32)..CONFIG.Version,TextColor3=C.gold,Font=Enum.Font.SourceSansBold,TextSize=24,},f)local msg=Txt(f,string.char(108,100,49),{Size=UDim2.new(1,0,0,24),Position=UDim2.new(0,0,0,56),TextXAlignment=Enum.TextXAlignment.Center,TextColor3=C.sub})local bar=New(string.char(70,114,97,109,101),{Size=UDim2.new(1,-40,0,8),Position=UDim2.new(0,20,0,94),BackgroundColor3=C.off,BorderSizePixel=0},f);Round(bar,4)local fill=New(string.char(70,114,97,109,101),{Size=UDim2.new(0,0,1,0),BackgroundColor3=C.accent,BorderSizePixel=0},bar);Round(fill,4)task.spawn(function()for idx,k in ipairs({string.char(108,100,49),string.char(108,100,50),string.char(108,100,51)})do msg.Text=T(k)TweenService:Create(fill,TweenInfo.new(0.5),{Size=UDim2.new(idx/3,0,1,0)}):Play()task.wait(0.55)end f:Destroy()done()end)end local function KeyScreen(onOk)local f=New(string.char(70,114,97,109,101),{Size=UDim2.fromOffset(400,290),AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),BackgroundColor3=C.bg,BorderSizePixel=0,},gui);Round(f,14);Stroke(f)Txt(f,string.char(107,95,116,105,116,108,101),{Size=UDim2.new(1,0,0,40),Position=UDim2.new(0,0,0,14),TextXAlignment=Enum.TextXAlignment.Center,TextColor3=C.gold,TextSize=24,Font=Enum.Font.SourceSansBold})Txt(f,string.char(107,95,115,117,98),{Size=UDim2.new(1,0,0,22),Position=UDim2.new(0,0,0,52),TextXAlignment=Enum.TextXAlignment.Center,TextColor3=C.sub})local lb=New(string.char(84,101,120,116,66,117,116,116,111,110),{Size=UDim2.fromOffset(30,26),Position=UDim2.new(1,-40,0,10),BackgroundColor3=C.item,Text=string.char(65),TextColor3=C.text,Font=FONT,TextSize=15,},f);Round(lb,6)lb.MouseButton1Click:Connect(function()S.Lang=(S.Lang==string.char(69,78))and string.char(65,82)or string.char(69,78);RefreshTexts()end)local plan=string.char(70,114,101,101)local bFree=Txt(f,string.char(107,95,102,114,101,101),{Size=UDim2.new(0.5,-28,0,34),Position=UDim2.new(0,20,0,86),BackgroundTransparency=0,TextXAlignment=Enum.TextXAlignment.Center},string.char(84,101,120,116,66,117,116,116,111,110))local bPaid=Txt(f,string.char(107,95,112,97,105,100),{Size=UDim2.new(0.5,-28,0,34),Position=UDim2.new(0.5,8,0,86),BackgroundTransparency=0,TextXAlignment=Enum.TextXAlignment.Center},string.char(84,101,120,116,66,117,116,116,111,110))Round(bFree,8);Round(bPaid,8)local function paint()bFree.BackgroundColor3=plan==string.char(70,114,101,101)and C.accent or C.item bPaid.BackgroundColor3=plan==string.char(80,97,105,100)and C.accent or C.item end bFree.MouseButton1Click:Connect(function()plan=string.char(70,114,101,101);paint()end)bPaid.MouseButton1Click:Connect(function()plan=string.char(80,97,105,100);paint()end)paint()local box=New(string.char(84,101,120,116,66,111,120),{Size=UDim2.new(1,-40,0,38),Position=UDim2.new(0,20,0,136),BackgroundColor3=C.item,Text="",PlaceholderText=T(string.char(107,95,112,104)),PlaceholderColor3=C.sub,TextColor3=C.text,Font=FONT,TextSize=16,ClearTextOnFocus=false,},f);Round(box,8)local status=New(string.char(84,101,120,116,76,97,98,101,108),{Size=UDim2.new(1,0,0,20),Position=UDim2.new(0,0,0,180),BackgroundTransparency=1,Text="",TextColor3=C.red,Font=FONT,TextSize=14,},f)local go=Txt(f,string.char(107,95,98,116,110),{Size=UDim2.new(1,-40,0,40),Position=UDim2.new(0,20,0,208),BackgroundColor3=C.accent,BackgroundTransparency=0,TextXAlignment=Enum.TextXAlignment.Center,Font=Enum.Font.SourceSansBold,TextSize=17},string.char(84,101,120,116,66,117,116,116,111,110))Round(go,8)New(string.char(84,101,120,116,76,97,98,101,108),{Size=UDim2.new(1,0,0,22),Position=UDim2.new(0,0,1,-28),BackgroundTransparency=1,Text=CONFIG.Youtube,TextColor3=C.sub,Font=FONT,TextSize=13,},f)go.MouseButton1Click:Connect(function()local k=box.Text:gsub(string.char(37,115,43),"")if CONFIG.Keys[k]and CONFIG.Keys[k]==plan then status.TextColor3=C.green;status.Text=T(string.char(107,95,111,107))pcall(function()if writefile then writefile(CONFIG.SessionFile,HttpService:JSONEncode({key=k,plan=plan}))end end)task.wait(0.4);f:Destroy();onOk(plan)else status.TextColor3=C.red;status.Text=T(string.char(107,95,98,97,100))end end)end local function LoadSession()local ok,s=pcall(function()if isfile and isfile(CONFIG.SessionFile)then return HttpService:JSONDecode(readfile(CONFIG.SessionFile))end end)if ok and s and CONFIG.Keys[s.key]and CONFIG.Keys[s.key]==s.plan then return s end end LoadSettings()gui=New(string.char(83,99,114,101,101,110,71,117,105),{Name=string.char(78,78,72,117,98),ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,DisplayOrder=999})gui.Parent=GuiParent()local function Start(plan)PLAN=plan LIM=CONFIG.Limits[plan]or CONFIG.Limits.Free Loading(BuildMain)end local sess=LoadSession()if not CONFIG.RequireKey then Start(string.char(80,97,105,100))elseif sess then Start(sess.plan)else KeyScreen(Start)end
+--[[
+    99N Hub V1  -  99 Nights in the Forest
+    UI structure: key screen -> loading -> window (sidebar + search + pages)
+    Same engine as EH Hub, adapted for 99 Nights in the Forest.
+    NOTE: I could not test this inside the game. Object names (Items folder,
+    children, chests) are guesses: open the Explorer, find the real folder
+    names, and update the NAMES table below. Features are visual / movement /
+    teleport only (no remote firing). Use at your own risk, it can still get
+    you banned.
+]]
+
+if getgenv and getgenv().NNHub_Cleanup then pcall(getgenv().NNHub_Cleanup) end
+
+------------------------------------------------------------------ SERVICES
+local Players      = game:GetService(string.char(80,108,97,121,101,114,115))
+local RunService   = game:GetService(string.char(82,117,110,83,101,114,118,105,99,101))
+local UIS          = game:GetService(string.char(85,115,101,114,73,110,112,117,116,83,101,114,118,105,99,101))
+local StarterGui   = game:GetService(string.char(83,116,97,114,116,101,114,71,117,105))
+local Lighting     = game:GetService(string.char(76,105,103,104,116,105,110,103))
+local HttpService  = game:GetService(string.char(72,116,116,112,83,101,114,118,105,99,101))
+local TeleportSvc  = game:GetService(string.char(84,101,108,101,112,111,114,116,83,101,114,118,105,99,101))
+local TweenService = game:GetService(string.char(84,119,101,101,110,83,101,114,118,105,99,101))
+local Stats        = game:GetService(string.char(83,116,97,116,115))
+local CoreGui      = game:GetService(string.char(67,111,114,101,71,117,105))
+local VirtualUser  = game:GetService(string.char(86,105,114,116,117,97,108,85,115,101,114))
+local LP           = Players.LocalPlayer
+
+------------------------------------------------------------------ CONFIG
+local CONFIG = {
+    Title        = string.char(57,57,78,32,72,117,98),
+    Version      = string.char(86,49),
+    Youtube      = string.char(89,111,117,84,117,98,101,58,32,104,116,116,112,115,58,47,47,121,111,117,116,117,98,101,46,99,111,109,47,64,98,121,116,104,101,119,97,121,105,113),
+    Discord      = string.char(104,116,116,112,115,58,47,47,100,105,115,99,111,114,100,46,103,103,47,102,75,89,101,101,82,84,83,102,85),
+    RequireKey   = true,
+    -- key = plan.  CHANGE THESE. (Client-side check only, not real security.)
+    Keys = {
+        [string.char(57,57,78,45,70,82,69,69,45,50,48,50,55)] = string.char(70,114,101,101),
+        [string.char(57,57,78,45,86,73,73,80,45,50,48,50,55)] = string.char(80,97,105,100),
+    },
+    Limits = {
+        Free = { speed = 60,  fly = 80,  jump = 100 },
+        Paid = { speed = 250, fly = 300, jump = 300 },
+    },
+    SettingsFile = string.char(78,78,72,117,98,95,83,101,116,116,105,110,103,115,46,106,115,111,110),
+    SessionFile  = string.char(78,78,72,117,98,95,83,101,115,115,105,111,110,46,106,115,111,110),
+}
+
+-- ---------- WORLD NAMES: adjust these to match the actual game/version you run this in ----------
+local NAMES = {
+    CoinFolders  = { string.char(73,116,101,109,115), string.char(68,114,111,112,115) },                            -- folder(s) holding collectable items: logs, scrap, food, fuel... (CHECK in Explorer)
+    CoinNamePart = "",                                              -- "" = every item in the folder; or a name part like "Diamond", "Log", "Scrap"
+    DropFolders  = { string.char(67,104,97,114,97,99,116,101,114,115), string.char(67,104,101,115,116,115), string.char(67,104,105,108,100,114,101,110) },          -- folders holding lost children / chests (CHECK in Explorer)
+    DropNameParts= { string.char(67,104,105,108,100), string.char(75,105,100), string.char(67,104,101,115,116) },                     -- name parts that count as a child / chest
+},                                          -- "" = every child; or list name parts like "Police", "Fire"
+}
+
+------------------------------------------------------------------ THEME
+local FONT = Enum.Font.SourceSansSemibold
+local C = {
+    bg     = Color3.fromRGB(14, 14, 18),
+    panel  = Color3.fromRGB(22, 22, 30),
+    item   = Color3.fromRGB(30, 30, 42),
+    hover  = Color3.fromRGB(42, 42, 58),
+    accent = Color3.fromRGB(235, 60, 70),
+    gold   = Color3.fromRGB(255, 215, 0),
+    text   = Color3.fromRGB(238, 238, 246),
+    sub    = Color3.fromRGB(150, 150, 172),
+    off    = Color3.fromRGB(70, 70, 92),
+    red    = Color3.fromRGB(255, 77, 77),
+    green  = Color3.fromRGB(80, 255, 120),
+    blue   = Color3.fromRGB(90, 170, 255),
+}
+
+------------------------------------------------------------------ LANGUAGES
+local L = {
+EN = {
+    HOME=string.char(72,111,109,101), FARM=string.char(65,117,116,111,32,73,116,101,109,115), COMBAT=string.char(82,101,115,99,117,101), PLAYER=string.char(80,108,97,121,101,114), TELEPORT=string.char(84,101,108,101,112,111,114,116),
+    VISUALS=string.char(86,105,115,117,97,108,115), SERVER=string.char(83,101,114,118,101,114), KEYS=string.char(75,101,121,98,105,110,100,115), SETTINGS=string.char(83,101,116,116,105,110,103,115),
+    G_MAIN=string.char(77,65,73,78), G_GAME=string.char(71,65,77,69), G_SYSTEM=string.char(83,89,83,84,69,77),
+    k_title=string.char(65,99,116,105,118,97,116,101,32,57,57,78,32,72,117,98), k_sub=string.char(67,104,111,111,115,101,32,121,111,117,114,32,112,108,97,110,44,32,116,104,101,110,32,101,110,116,101,114,32,116,104,101,32,107,101,121),
+    k_free=string.char(70,114,101,101), k_paid=string.char(80,97,105,100), k_ph=string.char(84,121,112,101,32,121,111,117,114,32,107,101,121,32,104,101,114,101,46,46,46), k_btn=string.char(65,99,116,105,118,97,116,101),
+    k_bad=string.char(73,110,118,97,108,105,100,32,107,101,121), k_ok=string.char(75,101,121,32,97,99,99,101,112,116,101,100), lang=string.char(76,97,110,103,117,97,103,101),
+    ld1=string.char(76,111,97,100,105,110,103,32,109,111,100,117,108,101,115,46,46,46), ld2=string.char(82,101,97,100,105,110,103,32,115,101,116,116,105,110,103,115,46,46,46), ld3=string.char(80,114,101,112,97,114,105,110,103,32,105,110,116,101,114,102,97,99,101,46,46,46),
+    search=string.char(83,101,97,114,99,104,32,102,101,97,116,117,114,101,115,46,46,46),
+    h_welcome=string.char(87,101,108,99,111,109,101), h_plan=string.char(80,108,97,110), h_role=string.char(82,111,108,101), h_fps=string.char(70,80,83), h_ping=string.char(80,105,110,103),
+    h_up=string.char(83,101,115,115,105,111,110,32,116,105,109,101), h_yt=string.char(67,111,112,121,32,89,111,117,84,117,98,101), h_dc=string.char(67,111,112,121,32,68,105,115,99,111,114,100), h_copied=string.char(67,111,112,105,101,100,33),
+    h_info=string.char(73,110,102,111), h_links=string.char(76,105,110,107,115),
+    f_head=string.char(65,117,116,111,32,73,116,101,109,115), f_coin=string.char(65,117,116,111,32,103,111,32,116,111,32,110,101,97,114,101,115,116,32,105,116,101,109), f_range=string.char(83,101,97,114,99,104,32,114,97,110,103,101),
+    f_height=string.char(72,101,105,103,104,116,32,97,98,111,118,101,32,105,116,101,109), f_delay=string.char(67,111,108,108,101,99,116,32,100,101,108,97,121,32,40,109,115,41),
+    f_esp=string.char(73,116,101,109,32,69,83,80), f_notify=string.char(82,97,114,101,32,105,116,101,109,32,110,111,116,105,102,105,101,114), f_rare=string.char(82,97,114,101,32,105,116,101,109,32,107,101,121,119,111,114,100,32,40,101,46,103,46,32,68,105,97,109,111,110,100,41),
+    c_head=string.char(82,101,115,99,117,101), c_knifeesp=string.char(67,104,105,108,100,114,101,110,32,47,32,67,104,101,115,116,32,69,83,80),
+    c_tpknife=string.char(84,101,108,101,112,111,114,116,32,116,111,32,110,101,97,114,101,115,116,32,99,104,105,108,100,32,47,32,99,104,101,115,116), c_none=string.char(78,111,116,104,105,110,103,32,102,111,117,110,100),
+    p_head=string.char(77,111,118,101,109,101,110,116), p_speed_on=string.char(67,117,115,116,111,109,32,115,112,101,101,100), p_speed=string.char(87,97,108,107,32,115,112,101,101,100),
+    p_jump_on=string.char(67,117,115,116,111,109,32,106,117,109,112), p_jump=string.char(74,117,109,112,32,112,111,119,101,114), p_fly=string.char(70,108,121), p_flyspeed=string.char(70,108,121,32,115,112,101,101,100),
+    p_noclip=string.char(78,111,99,108,105,112), p_inf=string.char(73,110,102,105,110,105,116,101,32,106,117,109,112), p_afk=string.char(65,110,116,105,32,65,70,75), p_cam=string.char(67,97,109,101,114,97),
+    p_fov_on=string.char(67,117,115,116,111,109,32,70,79,86), p_fov=string.char(70,105,101,108,100,32,111,102,32,118,105,101,119), p_grav_on=string.char(67,117,115,116,111,109,32,103,114,97,118,105,116,121), p_grav=string.char(71,114,97,118,105,116,121),
+    t_head=string.char(84,101,108,101,112,111,114,116), t_tween=string.char(84,101,108,101,112,111,114,116,32,115,112,101,101,100), t_player=string.char(80,108,97,121,101,114,32,110,97,109,101),
+    t_go=string.char(84,101,108,101,112,111,114,116,32,116,111,32,112,108,97,121,101,114), t_wp=string.char(87,97,121,112,111,105,110,116,115), t_wp_name=string.char(87,97,121,112,111,105,110,116,32,110,97,109,101),
+    t_wp_save=string.char(83,97,118,101,32,99,117,114,114,101,110,116,32,112,111,115,105,116,105,111,110), t_wp_go=string.char(71,111,32,116,111,32,119,97,121,112,111,105,110,116), t_wp_del=string.char(68,101,108,101,116,101,32,119,97,121,112,111,105,110,116),
+    t_coin=string.char(84,101,108,101,112,111,114,116,32,116,111,32,110,101,97,114,101,115,116,32,105,116,101,109), t_weapon=string.char(84,101,108,101,112,111,114,116,32,116,111,32,110,101,97,114,101,115,116,32,99,104,105,108,100,32,47,32,99,104,101,115,116),
+    t_click=string.char(67,116,114,108,32,43,32,67,108,105,99,107,32,116,101,108,101,112,111,114,116), t_saved=string.char(83,97,118,101,100), t_nowp=string.char(78,111,32,119,97,121,112,111,105,110,116,115),
+    v_head=string.char(86,105,115,117,97,108,115), v_esp=string.char(80,108,97,121,101,114,32,69,83,80), v_dist=string.char(69,83,80,32,109,97,120,32,100,105,115,116,97,110,99,101), v_full=string.char(70,117,108,108,98,114,105,103,104,116),
+    v_fog=string.char(82,101,109,111,118,101,32,102,111,103), v_fps=string.char(70,80,83,32,98,111,111,115,116,32,40,111,110,101,32,116,105,109,101,41),
+    s_head=string.char(83,101,114,118,101,114), s_rejoin=string.char(82,101,106,111,105,110,32,115,101,114,118,101,114), s_hop=string.char(83,101,114,118,101,114,32,104,111,112), s_lowhop=string.char(72,111,112,32,116,111,32,108,111,119,32,112,111,112,117,108,97,116,105,111,110),
+    s_copy=string.char(67,111,112,121,32,74,111,98,73,100), s_join_in=string.char(74,111,98,73,100,32,116,111,32,106,111,105,110), s_join=string.char(74,111,105,110,32,74,111,98,73,100), s_players=string.char(80,108,97,121,101,114,115),
+    kb_menu=string.char(84,111,103,103,108,101,32,109,101,110,117), kb_fly=string.char(84,111,103,103,108,101,32,102,108,121), kb_noclip=string.char(84,111,103,103,108,101,32,110,111,99,108,105,112),
+    kb_panic=string.char(80,97,110,105,99,32,40,99,108,111,115,101,32,97,108,108,41), kb_press=string.char(80,114,101,115,115,32,97,32,107,101,121,46,46,46),
+    st_lang=string.char(83,119,105,116,99,104,32,108,97,110,103,117,97,103,101), st_scale=string.char(73,110,116,101,114,102,97,99,101,32,115,99,97,108,101,32,40,37,41), st_save=string.char(83,97,118,101,32,115,101,116,116,105,110,103,115),
+    st_reset=string.char(82,101,115,101,116,32,115,101,116,116,105,110,103,115), st_saved=string.char(83,101,116,116,105,110,103,115,32,115,97,118,101,100), st_credits=string.char(77,97,100,101,32,119,105,116,104,32,76,117,97),
+    st_names=(string.char(73,102,32,97,32,102,101,97,116,117,114,101,32,102,105,110,100,115,32,110,111,116,104,105,110,103,44,32,101,100,105,116,32,116,104,101,32,78,65,77,69,83,32,116,97,98,108,101,32,97,116,32,116,104,101,32,116,111,112,32,111,102,32,116)..string.char(104,101,32,115,99,114,105,112,116)),
+    st_warn=(string.char(86,105,115,117,97,108,32,47,32,109,111,118,101,109,101,110,116,32,47,32,116,101,108,101,112,111,114,116,32,102,101,97,116,117,114,101,115,32,111,110,108,121,46,32,78,111,116,32,103,117,97,114,97,110,116,101,101,100,32,98,97,110,45,112)..string.char(114,111,111,102,44,32,117,115,101,32,97,116,32,121,111,117,114,32,111,119,110,32,114,105,115,107,46)),
+},
+AR = {
+    HOME=string.char(216,167,217,132,216,177,216,166,217,138,216,179,217,138,216,169), FARM=string.char(216,172,217,133,216,185,32,216,170,217,132,217,130,216,167,216,166,217,138), COMBAT=string.char(216,167,217,132,216,165,217,134,217,130,216,167,216,176), PLAYER=string.char(216,167,217,132,217,132,216,167,216,185,216,168), TELEPORT=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132),
+    VISUALS=string.char(216,167,217,132,217,133,216,177,216,166,217,138,216,167,216,170), SERVER=string.char(216,167,217,132,216,179,217,138,216,177,217,129,216,177), KEYS=string.char(216,167,217,132,216,167,216,174,216,170,216,181,216,167,216,177,216,167,216,170), SETTINGS=string.char(216,167,217,132,216,165,216,185,216,175,216,167,216,175,216,167,216,170),
+    G_MAIN=string.char(216,167,217,132,216,177,216,166,217,138,216,179,217,138), G_GAME=string.char(216,167,217,132,217,132,216,185,216,168,216,169), G_SYSTEM=string.char(216,167,217,132,217,134,216,184,216,167,217,133),
+    k_title=string.char(216,170,217,129,216,185,217,138,217,132,32,57,57,78,32,72,117,98), k_sub=string.char(216,167,216,174,216,170,216,177,32,216,174,216,183,216,170,217,131,32,216,171,217,133,32,216,163,216,175,216,174,217,132,32,216,167,217,132,217,133,217,129,216,170,216,167,216,173),
+    k_free=string.char(217,133,216,172,216,167,217,134,217,138), k_paid=string.char(217,133,216,175,217,129,217,136,216,185), k_ph=string.char(216,167,217,131,216,170,216,168,32,216,167,217,132,217,133,217,129,216,170,216,167,216,173,32,217,135,217,134,216,167,46,46,46), k_btn=string.char(216,170,217,129,216,185,217,138,217,132),
+    k_bad=string.char(217,133,217,129,216,170,216,167,216,173,32,216,186,217,138,216,177,32,216,181,216,173,217,138,216,173), k_ok=string.char(216,170,217,133,32,217,130,216,168,217,136,217,132,32,216,167,217,132,217,133,217,129,216,170,216,167,216,173), lang=string.char(216,167,217,132,217,132,216,186,216,169),
+    ld1=string.char(216,172,216,167,216,177,217,138,32,216,170,216,173,217,133,217,138,217,132,32,216,167,217,132,217,136,216,173,216,175,216,167,216,170,46,46,46), ld2=string.char(216,172,216,167,216,177,217,138,32,217,130,216,177,216,167,216,161,216,169,32,216,167,217,132,216,165,216,185,216,175,216,167,216,175,216,167,216,170,46,46,46), ld3=string.char(216,172,216,167,216,177,217,138,32,216,170,216,172,217,135,217,138,216,178,32,216,167,217,132,217,136,216,167,216,172,217,135,216,169,46,46,46),
+    search=string.char(216,167,216,168,216,173,216,171,32,216,185,217,134,32,217,133,217,138,216,178,216,169,46,46,46),
+    h_welcome=string.char(216,163,217,135,217,132,216,167,217,139), h_plan=string.char(216,167,217,132,216,174,216,183,216,169), h_role=string.char(216,167,217,132,216,175,217,136,216,177), h_fps=string.char(216,167,217,132,216,165,216,183,216,167,216,177,216,167,216,170), h_ping=string.char(216,167,217,132,216,168,217,138,217,134,216,186),
+    h_up=string.char(217,133,216,175,216,169,32,216,167,217,132,216,172,217,132,216,179,216,169), h_yt=string.char(217,134,216,179,216,174,32,217,138,217,136,216,170,217,138,217,136,216,168), h_dc=string.char(217,134,216,179,216,174,32,216,175,217,138,216,179,217,131,217,136,216,177,216,175), h_copied=string.char(216,170,217,133,32,216,167,217,132,217,134,216,179,216,174,33),
+    h_info=string.char(217,133,216,185,217,132,217,136,217,133,216,167,216,170), h_links=string.char(216,167,217,132,216,177,217,136,216,167,216,168,216,183),
+    f_head=string.char(216,172,217,133,216,185,32,216,170,217,132,217,130,216,167,216,166,217,138), f_coin=string.char(216,167,217,132,216,176,217,135,216,167,216,168,32,217,132,216,163,217,130,216,177,216,168,32,216,186,216,177,216,182,32,216,170,217,132,217,130,216,167,216,166,217,138,216,167,217,139), f_range=string.char(217,133,216,175,217,137,32,216,167,217,132,216,168,216,173,216,171),
+    f_height=string.char(216,167,217,132,216,167,216,177,216,170,217,129,216,167,216,185,32,217,129,217,136,217,130,32,216,167,217,132,216,185,217,133,217,132,216,169), f_delay=string.char(216,170,216,163,216,174,217,138,216,177,32,216,167,217,132,216,172,217,133,216,185,32,40,217,133,217,132,217,132,217,138,32,216,171,216,167,217,134,217,138,216,169,41),
+    f_esp=string.char(217,131,216,180,217,129,32,216,167,217,132,216,163,216,186,216,177,216,167,216,182), f_notify=string.char(216,170,217,134,216,168,217,138,217,135,32,216,186,216,177,216,182,32,217,134,216,167,216,175,216,177), f_rare=string.char(217,131,217,132,217,133,216,169,32,216,167,217,132,216,186,216,177,216,182,32,216,167,217,132,217,134,216,167,216,175,216,177,32,40,217,133,216,171,217,132,32,68,105,97,109,111,110,100,41),
+    c_head=string.char(216,167,217,132,216,165,217,134,217,130,216,167,216,176), c_knifeesp=string.char(217,131,216,180,217,129,32,216,167,217,132,216,163,216,183,217,129,216,167,217,132,32,47,32,216,167,217,132,216,181,217,134,216,167,216,175,217,138,217,130),
+    c_tpknife=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132,32,217,132,216,163,217,130,216,177,216,168,32,216,183,217,129,217,132,32,47,32,216,181,217,134,216,175,217,136,217,130), c_none=string.char(217,133,216,167,32,217,132,217,130,217,138,216,170,32,216,180,217,138),
+    p_head=string.char(216,167,217,132,216,173,216,177,217,131,216,169), p_speed_on=string.char(216,179,216,177,216,185,216,169,32,217,133,216,174,216,181,216,181,216,169), p_speed=string.char(216,179,216,177,216,185,216,169,32,216,167,217,132,217,133,216,180,217,138),
+    p_jump_on=string.char(217,130,217,129,216,178,32,217,133,216,174,216,181,216,181), p_jump=string.char(217,130,217,136,216,169,32,216,167,217,132,217,130,217,129,216,178), p_fly=string.char(216,167,217,132,216,183,217,138,216,177,216,167,217,134), p_flyspeed=string.char(216,179,216,177,216,185,216,169,32,216,167,217,132,216,183,217,138,216,177,216,167,217,134),
+    p_noclip=string.char(216,167,216,174,216,170,216,177,216,167,217,130,32,216,167,217,132,216,172,216,175,216,177,216,167,217,134), p_inf=string.char(217,130,217,129,216,178,32,217,132,216,167,32,217,134,217,135,216,167,216,166,217,138), p_afk=string.char(217,133,217,134,216,185,32,216,167,217,132,216,183,216,177,216,175,32,40,65,70,75,41), p_cam=string.char(216,167,217,132,217,131,216,167,217,133,217,138,216,177,216,167),
+    p_fov_on=string.char(216,178,216,167,217,136,217,138,216,169,32,216,177,216,164,217,138,216,169,32,217,133,216,174,216,181,216,181,216,169), p_fov=string.char(216,178,216,167,217,136,217,138,216,169,32,216,167,217,132,216,177,216,164,217,138,216,169), p_grav_on=string.char(216,172,216,167,216,176,216,168,217,138,216,169,32,217,133,216,174,216,181,216,181,216,169), p_grav=string.char(216,167,217,132,216,172,216,167,216,176,216,168,217,138,216,169),
+    t_head=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132), t_tween=string.char(216,179,216,177,216,185,216,169,32,216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132), t_player=string.char(216,167,216,179,217,133,32,216,167,217,132,217,132,216,167,216,185,216,168),
+    t_go=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132,32,217,132,217,132,216,167,216,185,216,168), t_wp=string.char(217,134,217,130,216,167,216,183,32,216,167,217,132,216,173,217,129,216,184), t_wp_name=string.char(216,167,216,179,217,133,32,216,167,217,132,217,134,217,130,216,183,216,169),
+    t_wp_save=string.char(216,173,217,129,216,184,32,216,167,217,132,217,133,217,131,216,167,217,134,32,216,167,217,132,216,173,216,167,217,132,217,138), t_wp_go=string.char(216,167,217,132,216,176,217,135,216,167,216,168,32,217,132,217,132,217,134,217,130,216,183,216,169), t_wp_del=string.char(216,173,216,176,217,129,32,216,167,217,132,217,134,217,130,216,183,216,169),
+    t_coin=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132,32,217,132,216,163,217,130,216,177,216,168,32,216,186,216,177,216,182), t_weapon=string.char(216,167,217,132,216,167,217,134,216,170,217,130,216,167,217,132,32,217,132,216,163,217,130,216,177,216,168,32,216,183,217,129,217,132,32,47,32,216,181,217,134,216,175,217,136,217,130),
+    t_click=string.char(216,167,217,134,216,170,217,130,216,167,217,132,32,216,168,217,128,32,67,116,114,108,32,43,32,217,134,217,130,216,177), t_saved=string.char(216,170,217,133,32,216,167,217,132,216,173,217,129,216,184), t_nowp=string.char(217,132,216,167,32,216,170,217,136,216,172,216,175,32,217,134,217,130,216,167,216,183),
+    v_head=string.char(216,167,217,132,217,133,216,177,216,166,217,138,216,167,216,170), v_esp=string.char(217,131,216,180,217,129,32,216,167,217,132,217,132,216,167,216,185,216,168,217,138,217,134), v_dist=string.char(216,163,217,130,216,181,217,137,32,217,133,216,179,216,167,217,129,216,169,32,217,132,217,132,217,131,216,180,217,129), v_full=string.char(216,165,216,182,216,167,216,161,216,169,32,217,131,216,167,217,133,217,132,216,169),
+    v_fog=string.char(216,165,216,178,216,167,217,132,216,169,32,216,167,217,132,216,182,216,168,216,167,216,168), v_fps=string.char(216,177,217,129,216,185,32,216,167,217,132,217,129,216,177,217,138,217,133,216,167,216,170,32,40,217,133,216,177,216,169,32,217,136,216,167,216,173,216,175,216,169,41),
+    s_head=string.char(216,167,217,132,216,179,217,138,216,177,217,129,216,177), s_rejoin=string.char(216,165,216,185,216,167,216,175,216,169,32,216,167,217,132,216,175,216,174,217,136,217,132), s_hop=string.char(216,170,216,168,216,175,217,138,217,132,32,216,167,217,132,216,179,217,138,216,177,217,129,216,177), s_lowhop=string.char(216,179,217,138,216,177,217,129,216,177,32,217,130,217,132,217,138,217,132,32,216,167,217,132,217,132,216,167,216,185,216,168,217,138,217,134),
+    s_copy=string.char(217,134,216,179,216,174,32,74,111,98,73,100), s_join_in=string.char(74,111,98,73,100,32,217,132,217,132,216,175,216,174,217,136,217,132), s_join=string.char(216,175,216,174,217,136,217,132,32,74,111,98,73,100), s_players=string.char(216,167,217,132,217,132,216,167,216,185,216,168,217,136,217,134),
+    kb_menu=string.char(216,165,216,184,217,135,216,167,216,177,47,216,165,216,174,217,129,216,167,216,161,32,216,167,217,132,217,130,216,167,216,166,217,133,216,169), kb_fly=string.char(216,170,216,180,216,186,217,138,217,132,32,216,167,217,132,216,183,217,138,216,177,216,167,217,134), kb_noclip=string.char(216,170,216,180,216,186,217,138,217,132,32,216,167,217,132,216,167,216,174,216,170,216,177,216,167,217,130),
+    kb_panic=string.char(216,178,216,177,32,216,167,217,132,216,183,217,136,216,167,216,177,216,166,32,40,216,165,216,186,217,132,216,167,217,130,32,217,131,217,132,32,216,180,217,138,216,161,41), kb_press=string.char(216,167,216,182,216,186,216,183,32,216,178,216,177,216,167,217,139,46,46,46),
+    st_lang=string.char(216,170,216,168,216,175,217,138,217,132,32,216,167,217,132,217,132,216,186,216,169), st_scale=string.char(216,173,216,172,217,133,32,216,167,217,132,217,136,216,167,216,172,217,135,216,169,32,40,37,41), st_save=string.char(216,173,217,129,216,184,32,216,167,217,132,216,165,216,185,216,175,216,167,216,175,216,167,216,170),
+    st_reset=string.char(216,165,216,185,216,167,216,175,216,169,32,216,167,217,132,216,182,216,168,216,183), st_saved=string.char(216,170,217,133,32,216,173,217,129,216,184,32,216,167,217,132,216,165,216,185,216,175,216,167,216,175,216,167,216,170), st_credits=string.char(217,133,216,181,217,134,217,136,216,185,32,216,168,217,132,216,186,216,169,32,76,117,97),
+    st_names=(string.char(216,165,216,176,216,167,32,217,133,217,138,216,178,216,169,32,217,133,216,167,32,216,170,217,132,217,130,217,137,32,216,180,217,138,216,140,32,216,185,216,175,217,145,217,132,32,216,172,216,175,217,136,217,132,32,78,65,77,69,83,32,216,168,216)..string.char(163,216,185,217,132,217,137,32,216,167,217,132,216,179,217,131,216,177,216,168,216,170)),
+    st_warn=(string.char(216,167,217,132,217,133,217,138,216,178,216,167,216,170,32,217,135,217,134,216,167,32,216,168,216,181,216,177,217,138,216,169,47,216,173,216,177,217,131,216,169,47,216,167,217,134,216,170,217,130,216,167,217,132,32,217,129,217,130,216,183,46,32,217)..string.char(133,216,167,32,217,134,216,182,217,133,217,134,32,216,185,216,175,217,133,32,216,167,217,132,216,173,216,184,216,177,32,49,48,48,37,216,140,32,216,167,216,179,216,170,216,174,216,175,217,133,217,135,216,167,32,216,185,217,132,217,137,32,217,133)..string.char(216,179,216,164,217,136,217,132,217,138,216,170,217,131,46)),
+},
+}
+
+------------------------------------------------------------------ SETTINGS
+local S = {
+    Lang = string.char(69,78), Scale = UIS.TouchEnabled and 80 or 100,
+    Speed = 32, Jump = 80, FlySpeed = 60, FOV = 80, Gravity = 100,
+    FarmRange = 300, FarmHeight = 3, ClickDelay = 150,
+    TweenSpeed = 300, ESPDist = 1500, RareWord = "", AimFOV = 12,
+    Waypoints = {},
+    Keys = { Menu = string.char(82,105,103,104,116,83,104,105,102,116), Fly = string.char(70), Noclip = string.char(78), Panic = string.char(69,110,100) },
+}
+local function T(k) return (L[S.Lang] and L[S.Lang][k]) or L.EN[k] or tostring(k) end
+
+local function SaveSettings()
+    pcall(function() if writefile then writefile(CONFIG.SettingsFile, HttpService:JSONEncode(S)) end end)
+end
+local function LoadSettings()
+    pcall(function()
+        if isfile and isfile(CONFIG.SettingsFile) then
+            local d = HttpService:JSONDecode(readfile(CONFIG.SettingsFile))
+            for k, v in pairs(d) do
+                if type(v) == string.char(116,97,98,108,101) and type(S[k]) == string.char(116,97,98,108,101) then
+                    for k2, v2 in pairs(v) do S[k][k2] = v2 end
+                else S[k] = v end
+            end
+        end
+    end)
+end
+
+------------------------------------------------------------------ CORE HELPERS
+local alive, conns, texts, rows, updaters = true, {}, {}, {}, {}
+local F = {}            -- runtime feature flags (not saved)
+local PLAN = string.char(70,114,101,101)
+local LIM = CONFIG.Limits.Free
+local coinsCollected = 0
+local gui, window, content, pages, pageBtns, curPage = nil, nil, nil, {}, {}, nil
+
+local function Bind(sig, fn) local c = sig:Connect(fn); conns[#conns + 1] = c; return c end
+
+local function New(cls, props, parent)
+    local o = Instance.new(cls)
+    for k, v in pairs(props or {}) do o[k] = v end
+    if parent then o.Parent = parent end
+    return o
+end
+local function Round(o, r) New(string.char(85,73,67,111,114,110,101,114), { CornerRadius = UDim.new(0, r or 8) }, o); return o end
+local function Stroke(o, col, th, tr) return New(string.char(85,73,83,116,114,111,107,101), { Color = col or C.accent, Thickness = th or 1.5, Transparency = tr or 0.4 }, o) end
+
+local function Notify(text)
+    pcall(function()
+        StarterGui:SetCore(string.char(83,101,110,100,78,111,116,105,102,105,99,97,116,105,111,110), { Title = CONFIG.Title .. string.char(32) .. CONFIG.Version, Text = text, Duration = 3 })
+    end)
+end
+
+local function Txt(parent, key, props, cls)
+    local l = New(cls or string.char(84,101,120,116,76,97,98,101,108), {
+        BackgroundTransparency = 1, Text = T(key), TextColor3 = C.text,
+        Font = FONT, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left,
+    }, parent)
+    for k, v in pairs(props or {}) do l[k] = v end
+    texts[#texts + 1] = { l, key }
+    return l
+end
+local function RefreshTexts()
+    for _, t in ipairs(texts) do if t[1].Parent then t[1].Text = T(t[2]) end end
+end
+
+local function GuiParent()
+    local ok, h = pcall(function() return gethui and gethui() end)
+    if ok and h then return h end
+    if pcall(function() return CoreGui.Name end) then return CoreGui end
+    return LP:WaitForChild(string.char(80,108,97,121,101,114,71,117,105))
+end
+
+local function Char() return LP.Character end
+local function HRP() local c = LP.Character; return c and c:FindFirstChild(string.char(72,117,109,97,110,111,105,100,82,111,111,116,80,97,114,116)) end
+local function Hum() local c = LP.Character; return c and c:FindFirstChildOfClass(string.char(72,117,109,97,110,111,105,100)) end
+
+------------------------------------------------------------------ TELEPORT HELPERS
+local function TeleportTo(cf)
+    local hrp = HRP(); if not hrp then return end
+    local d = (hrp.Position - cf.Position).Magnitude
+    local t = math.max(d / math.max(S.TweenSpeed, 50), 0.05)
+    F.Tweening = true
+    local tw = TweenService:Create(hrp, TweenInfo.new(t, Enum.EasingStyle.Linear), { CFrame = cf })
+    tw.Completed:Connect(function() F.Tweening = false end)
+    tw:Play()
+    return tw
+end
+
+------------------------------------------------------------------ WORLD SCAN HELPERS (99 Nights in the Forest map)
+local function FindFolders(names)
+    local found = {}
+    for _, n in ipairs(names) do
+        local f = workspace:FindFirstChild(n, true)
+        if f then found[#found + 1] = f end
+    end
+    return found
+end
+
+local function PartPos(inst)
+    if inst:IsA(string.char(66,97,115,101,80,97,114,116)) then return inst.Position end
+    if inst:IsA(string.char(77,111,100,101,108)) then
+        local ok, cf = pcall(function() return inst:GetPivot() end)
+        if ok then return cf.Position end
+        local pp = inst.PrimaryPart or inst:FindFirstChildWhichIsA(string.char(66,97,115,101,80,97,114,116), true)
+        if pp then return pp.Position end
+    end
+    return nil
+end
+
+local coinFolderCache, coinFolderT = {}, 0
+local function CoinFolders()
+    if os.clock() - coinFolderT > 5 or #coinFolderCache == 0 then
+        coinFolderT = os.clock()
+        coinFolderCache = FindFolders(NAMES.CoinFolders)
+    end
+    return coinFolderCache
+end
+
+local function CoinList()
+    local t = {}
+    local folders = CoinFolders()
+    if #folders > 0 then
+        for _, folder in ipairs(folders) do
+            for _, o in ipairs(folder:GetChildren()) do
+                if (o:IsA(string.char(66,97,115,101,80,97,114,116)) or o:IsA(string.char(77,111,100,101,108))) and tostring(o.Name):find(NAMES.CoinNamePart, 1, true) then
+                    t[#t + 1] = o
+                end
+            end
+        end
+    elseif NAMES.CoinNamePart ~= "" then
+        for _, o in ipairs(workspace:GetDescendants()) do
+            if (o:IsA(string.char(66,97,115,101,80,97,114,116)) or o:IsA(string.char(77,111,100,101,108))) and tostring(o.Name):find(NAMES.CoinNamePart) then
+                t[#t + 1] = o
+            end
+        end
+    end
+    return t
+end
+
+local function NearestCoin(range)
+    local hrp = HRP(); if not hrp then return end
+    local best, bd
+    for _, o in ipairs(CoinList()) do
+        local pos = PartPos(o)
+        if pos then
+            local d = (pos - hrp.Position).Magnitude
+            if (not range or d <= range) and (not bd or d < bd) then best, bd = o, d end
+        end
+    end
+    return best, bd
+end
+
+local dropCache, dropT = {}, 0
+local function DropList()
+    if os.clock() - dropT > 2 then
+        dropT = os.clock()
+        dropCache = {}
+        local folders = FindFolders(NAMES.DropFolders)
+        local scan = function(root)
+            for _, o in ipairs(root:GetDescendants()) do
+                if o:IsA(string.char(66,97,115,101,80,97,114,116)) or o:IsA(string.char(77,111,100,101,108)) then
+                    local nm = tostring(o.Name)
+                    for _, part in ipairs(NAMES.DropNameParts) do
+                        if nm:find(part) then dropCache[#dropCache + 1] = o break end
+                    end
+                end
+            end
+        end
+        if #folders > 0 then for _, f in ipairs(folders) do scan(f) end else scan(workspace) end
+    end
+    return dropCache
+end
+
+local function NearestDrop(range)
+    local hrp = HRP(); if not hrp then return end
+    local best, bd
+    for _, o in ipairs(DropList()) do
+        if o.Parent then
+            local pos = PartPos(o)
+            if pos then
+                local d = (pos - hrp.Position).Magnitude
+                if (not range or d <= range) and (not bd or d < bd) then best, bd = o, d end
+            end
+        end
+    end
+    return best, bd
+end
+
+-- Picking up a coin/weapon is game-specific: most maps use a Touch
+-- event or a ProximityPrompt. We try both so this works on many versions; if
+-- your server uses a RemoteEvent instead, tell me its name/path and I will
+-- wire it in directly.
+local function TryTouch(inst)
+    local part = inst:IsA(string.char(66,97,115,101,80,97,114,116)) and inst or (inst.PrimaryPart or inst:FindFirstChildWhichIsA(string.char(66,97,115,101,80,97,114,116), true))
+    if not part then return end
+    local prompt = inst:FindFirstChildWhichIsA(string.char(80,114,111,120,105,109,105,116,121,80,114,111,109,112,116), true)
+    if prompt then pcall(function() fireproximityprompt(prompt) end) return end
+    local hrp = HRP()
+    if hrp then
+        pcall(function() firetouchinterest(hrp, part, 0) end)
+        pcall(function() firetouchinterest(hrp, part, 1) end)
+    end
+end
+
+------------------------------------------------------------------ ESP
+local espObjs = { player = {}, coin = {}, drop = {} }
+local function ClearESP(group)
+    for _, o in ipairs(espObjs[group]) do pcall(function() o:Destroy() end) end
+    espObjs[group] = {}
+end
+local function Tag(group, target, adornee, color, text)
+    local hl = New(string.char(72,105,103,104,108,105,103,104,116), {
+        Adornee = target, FillColor = color, OutlineColor = Color3.new(1, 1, 1),
+        FillTransparency = 0.6, DepthMode = Enum.HighlightDepthMode.AlwaysOnTop,
+    }, gui)
+    local bb = New(string.char(66,105,108,108,98,111,97,114,100,71,117,105), {
+        Adornee = adornee, Size = UDim2.fromOffset(150, 20), StudsOffset = Vector3.new(0, 3, 0), AlwaysOnTop = true,
+    }, gui)
+    local lbl = New(string.char(84,101,120,116,76,97,98,101,108), {
+        Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Text = text, TextColor3 = color,
+        Font = FONT, TextSize = 14, TextStrokeTransparency = 0.4,
+    }, bb)
+    table.insert(espObjs[group], hl); table.insert(espObjs[group], bb)
+    return lbl
+end
+
+------------------------------------------------------------------ UI COMPONENTS
+local function ShowPage(name)
+    curPage = name
+    for n, p in pairs(pages) do p.Visible = (n == name) end
+    for n, b in pairs(pageBtns) do
+        b.BackgroundColor3 = (n == name) and C.accent or C.item
+        b.BackgroundTransparency = (n == name) and 0.2 or 0.5
+    end
+end
+
+local function Page(name)
+    local p = New(string.char(83,99,114,111,108,108,105,110,103,70,114,97,109,101), {
+        Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, BorderSizePixel = 0,
+        ScrollBarThickness = 3, ScrollBarImageColor3 = C.accent, CanvasSize = UDim2.new(),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y, Visible = false,
+    }, content)
+    New(string.char(85,73,76,105,115,116,76,97,121,111,117,116), { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }, p)
+    New(string.char(85,73,80,97,100,100,105,110,103), { PaddingRight = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6) }, p)
+    pages[name] = p; curPage = name
+    return p
+end
+
+local building
+local function AddRow(h, key, header)
+    local f = New(string.char(70,114,97,109,101), {
+        Size = UDim2.new(1, 0, 0, h), BackgroundColor3 = C.item,
+        BackgroundTransparency = header and 1 or 0, BorderSizePixel = 0,
+    }, pages[building])
+    if not header then Round(f, 8) end
+    rows[#rows + 1] = { f = f, page = building, key = key or "", header = header }
+    return f
+end
+
+local function Header(key)
+    local f = AddRow(24, key, true)
+    Txt(f, key, { Size = UDim2.new(1, -8, 1, 0), Position = UDim2.new(0, 4, 0, 0), TextColor3 = C.gold, TextSize = 14 })
+end
+
+local function Info(fn)
+    local f = AddRow(30, "")
+    local l = New(string.char(84,101,120,116,76,97,98,101,108), {
+        Size = UDim2.new(1, -20, 1, 0), Position = UDim2.new(0, 12, 0, 0), BackgroundTransparency = 1,
+        Text = "", TextColor3 = C.text, Font = FONT, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left,
+    }, f)
+    updaters[#updaters + 1] = function() l.Text = fn() end
+    l.Text = fn()
+end
+
+local function Toggle(key, cb)
+    local f = AddRow(36, key)
+    Txt(f, key, { Size = UDim2.new(1, -70, 1, 0), Position = UDim2.new(0, 12, 0, 0) })
+    local sw = New(string.char(84,101,120,116,66,117,116,116,111,110), {
+        Text = "", Size = UDim2.fromOffset(42, 22), Position = UDim2.new(1, -54, 0.5, -11),
+        BackgroundColor3 = C.off, AutoButtonColor = false,
+    }, f); Round(sw, 11)
+    local dot = New(string.char(70,114,97,109,101), { Size = UDim2.fromOffset(16, 16), Position = UDim2.new(0, 3, 0.5, -8), BackgroundColor3 = C.text }, sw); Round(dot, 8)
+    local state = false
+    local function set(v)
+        state = v
+        TweenService:Create(sw, TweenInfo.new(0.15), { BackgroundColor3 = v and C.accent or C.off }):Play()
+        TweenService:Create(dot, TweenInfo.new(0.15), { Position = v and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8) }):Play()
+        task.spawn(cb, v)
+    end
+    sw.MouseButton1Click:Connect(function() set(not state) end)
+    return set, function() return state end
+end
+
+local function Slider(key, id, min, max, cb)
+    local f = AddRow(52, key)
+    Txt(f, key, { Size = UDim2.new(1, -80, 0, 24), Position = UDim2.new(0, 12, 0, 2) })
+    local val = New(string.char(84,101,120,116,76,97,98,101,108), {
+        Size = UDim2.fromOffset(60, 24), Position = UDim2.new(1, -72, 0, 2), BackgroundTransparency = 1,
+        Text = "", TextColor3 = C.gold, Font = FONT, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Right,
+    }, f)
+    local bar = New(string.char(70,114,97,109,101), { Size = UDim2.new(1, -24, 0, 8), Position = UDim2.new(0, 12, 0, 34), BackgroundColor3 = C.off, BorderSizePixel = 0 }, f); Round(bar, 4)
+    local fill = New(string.char(70,114,97,109,101), { Size = UDim2.new(0, 0, 1, 0), BackgroundColor3 = C.accent, BorderSizePixel = 0 }, bar); Round(fill, 4)
+    local function setv(v)
+        v = math.clamp(math.floor(v + 0.5), min, max)
+        S[id] = v
+        fill.Size = UDim2.new((v - min) / math.max(max - min, 1), 0, 1, 0)
+        val.Text = tostring(v)
+        if cb then cb(v) end
+    end
+    local dragging = false
+    local function fromInput(i) setv(min + (max - min) * math.clamp((i.Position.X - bar.AbsolutePosition.X) / math.max(bar.AbsoluteSize.X, 1), 0, 1)) end
+    bar.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = true; fromInput(i) end
+    end)
+    Bind(UIS.InputChanged, function(i)
+        if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then fromInput(i) end
+    end)
+    Bind(UIS.InputEnded, function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = false end
+    end)
+    setv(math.clamp(S[id] or min, min, max))
+    return setv
+end
+
+local function Button(key, cb, col)
+    local f = AddRow(34, key)
+    local b = New(string.char(84,101,120,116,66,117,116,116,111,110), {
+        Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Text = T(key),
+        TextColor3 = col or C.text, Font = FONT, TextSize = 15,
+    }, f)
+    texts[#texts + 1] = { b, key }
+    b.MouseEnter:Connect(function() f.BackgroundColor3 = C.hover end)
+    b.MouseLeave:Connect(function() f.BackgroundColor3 = C.item end)
+    b.MouseButton1Click:Connect(function() task.spawn(cb, b) end)
+    return f, b
+end
+
+local function Input(key, placeholder, default)
+    local f = AddRow(36, key)
+    Txt(f, key, { Size = UDim2.new(0.45, 0, 1, 0), Position = UDim2.new(0, 12, 0, 0) })
+    local box = New(string.char(84,101,120,116,66,111,120), {
+        Size = UDim2.new(0.5, -12, 0, 26), Position = UDim2.new(0.5, 0, 0.5, -13), BackgroundColor3 = C.panel,
+        Text = default or "", PlaceholderText = placeholder or "", TextColor3 = C.text, PlaceholderColor3 = C.sub,
+        Font = FONT, TextSize = 14, ClearTextOnFocus = false,
+    }, f); Round(box, 6)
+    return box
+end
+
+local rebinding
+local function Keybind(key, id, action)
+    local f = AddRow(36, key)
+    Txt(f, key, { Size = UDim2.new(0.6, 0, 1, 0), Position = UDim2.new(0, 12, 0, 0) })
+    local b = New(string.char(84,101,120,116,66,117,116,116,111,110), {
+        Size = UDim2.new(0.3, 0, 0, 26), Position = UDim2.new(0.7, -12, 0.5, -13), BackgroundColor3 = C.panel,
+        Text = S.Keys[id], TextColor3 = C.gold, Font = FONT, TextSize = 14,
+    }, f); Round(b, 6)
+    b.MouseButton1Click:Connect(function()
+        b.Text = T(string.char(107,98,95,112,114,101,115,115))
+        rebinding = function(name) S.Keys[id] = name; b.Text = name end
+    end)
+    updaters[#updaters + 1] = function() if not rebinding and b.Text ~= S.Keys[id] then b.Text = S.Keys[id] end end
+    return action
+end
+
+------------------------------------------------------------------ PLAYER FEATURES
+local flyBV, flyBG
+local function StopFly()
+    if flyBV then flyBV:Destroy(); flyBV = nil end
+    if flyBG then flyBG:Destroy(); flyBG = nil end
+end
+local function EnsureFly()
+    local hrp = HRP(); if not hrp then return false end
+    if not flyBV or flyBV.Parent ~= hrp then
+        StopFly()
+        flyBV = New(string.char(66,111,100,121,86,101,108,111,99,105,116,121), { MaxForce = Vector3.new(9e9, 9e9, 9e9), Velocity = Vector3.zero }, hrp)
+        flyBG = New(string.char(66,111,100,121,71,121,114,111), { MaxTorque = Vector3.new(9e9, 9e9, 9e9), P = 9e4, CFrame = hrp.CFrame }, hrp)
+    end
+    return true
+end
+
+local origLight = {
+    Brightness = Lighting.Brightness, ClockTime = Lighting.ClockTime, FogEnd = Lighting.FogEnd,
+    GlobalShadows = Lighting.GlobalShadows, Ambient = Lighting.Ambient, OutdoorAmbient = Lighting.OutdoorAmbient,
+}
+local function RestoreLight() for k, v in pairs(origLight) do pcall(function() Lighting[k] = v end) end end
+
+local fps, startT = 60, os.clock()
+Bind(RunService.RenderStepped, function(dt) fps = fps * 0.9 + (1 / math.max(dt, 1e-4)) * 0.1 end)
+
+
+Bind(RunService.Heartbeat, function()
+    local hum, hrp, cam = Hum(), HRP(), workspace.CurrentCamera
+    if hum then
+        if F.Speed then hum.WalkSpeed = S.Speed end
+        if F.Jump then hum.UseJumpPower = true; hum.JumpPower = S.Jump end
+    end
+    if F.Grav then workspace.Gravity = S.Gravity end
+    if F.FOV and cam then cam.FieldOfView = S.FOV end
+    if F.Fly and hum and hrp and EnsureFly() then
+        local dir = hum.MoveDirection
+        local up = (UIS:IsKeyDown(Enum.KeyCode.Space) and 1 or 0) - (UIS:IsKeyDown(Enum.KeyCode.LeftControl) and 1 or 0)
+        local vel = dir * S.FlySpeed + Vector3.new(0, up * S.FlySpeed, 0)
+        local look = cam.CFrame.LookVector
+        local flat = Vector3.new(look.X, 0, look.Z)
+        if dir.Magnitude > 0 and flat.Magnitude > 0 then
+            vel = vel + Vector3.new(0, look.Y * dir:Dot(flat.Unit) * S.FlySpeed, 0)
+        end
+        flyBV.Velocity = vel
+        flyBG.CFrame = cam.CFrame
+    end
+    if F.Farm and hrp then
+        local coin = NearestCoin(S.FarmRange)
+        if coin then
+            local pos = PartPos(coin)
+            if pos then
+                hrp.CFrame = CFrame.new(pos + Vector3.new(0, S.FarmHeight, 0), pos)
+                hrp.AssemblyLinearVelocity = Vector3.zero
+            end
+        end
+    end
+    if F.Full then
+        Lighting.Brightness = 2; Lighting.ClockTime = 14; Lighting.GlobalShadows = false
+        Lighting.Ambient = Color3.fromRGB(178, 178, 178); Lighting.OutdoorAmbient = Color3.fromRGB(178, 178, 178)
+    end
+    if F.Fog then
+        Lighting.FogEnd = 9e9
+        local a = Lighting:FindFirstChildOfClass(string.char(65,116,109,111,115,112,104,101,114,101)); if a then a.Density = 0 end
+    end
+end)
+
+Bind(RunService.Stepped, function()
+    if (F.Noclip or F.Farm or F.Tweening or F.Fly) and Char() then
+        for _, p in ipairs(Char():GetDescendants()) do
+            if p:IsA(string.char(66,97,115,101,80,97,114,116)) then p.CanCollide = false end
+        end
+    end
+end)
+
+Bind(UIS.JumpRequest, function()
+    if F.InfJump then local h = Hum(); if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end end
+end)
+Bind(LP.Idled, function()
+    if F.AFK then pcall(function() VirtualUser:CaptureController(); VirtualUser:ClickButton2(Vector2.new()) end) end
+end)
+
+Bind(UIS.InputBegan, function(i, gp)
+    if gp or not F.ClickTP then return end
+    if i.UserInputType == Enum.UserInputType.MouseButton1 and UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+        local m = LP:GetMouse()
+        if m.Hit then TeleportTo(CFrame.new(m.Hit.Position + Vector3.new(0, 4, 0))) end
+    end
+end)
+
+-- background loops
+local grabbed = {}
+task.spawn(function() -- coin grab loop
+    while alive do
+        if F.Farm then
+            local coin, d = NearestCoin(S.FarmRange)
+            if coin and d and d < 8 and not grabbed[coin] then
+                grabbed[coin] = true
+                TryTouch(coin)
+                coinsCollected = coinsCollected + 1
+                task.delay(2, function() grabbed[coin] = nil end)
+            end
+        end
+        task.wait(math.max(S.ClickDelay, 50) / 1000)
+    end
+end)
+
+local notified = {}
+task.spawn(function() -- coin ESP + rare notify loop
+    while alive do
+        local coins = CoinList()
+        if F.CoinESP then
+            ClearESP(string.char(99,111,105,110))
+            for _, o in ipairs(coins) do
+                local isRare = S.RareWord ~= "" and tostring(o.Name):lower():find(tostring(S.RareWord):lower(), 1, true)
+                Tag(string.char(99,111,105,110), o, (o:IsA(string.char(66,97,115,101,80,97,114,116)) and o) or (o.PrimaryPart or o:FindFirstChildWhichIsA(string.char(66,97,115,101,80,97,114,116), true)),
+                    isRare and C.gold or C.blue, o.Name)
+            end
+        end
+        if F.CoinNotify then
+            for _, o in ipairs(coins) do
+                if S.RareWord ~= "" and tostring(o.Name):lower():find(tostring(S.RareWord):lower(), 1, true) and not notified[o] then
+                    notified[o] = true; Notify(o.Name)
+                end
+            end
+        end
+        task.wait(1.2)
+    end
+end)
+
+task.spawn(function() -- dropped weapon ESP loop
+    while alive do
+        if F.DropESP then
+            ClearESP(string.char(100,114,111,112))
+            for _, o in ipairs(DropList()) do
+                if o.Parent then
+                    Tag(string.char(100,114,111,112), o, (o:IsA(string.char(66,97,115,101,80,97,114,116)) and o) or (o.PrimaryPart or o:FindFirstChildWhichIsA(string.char(66,97,115,101,80,97,114,116), true)),
+                        C.accent, o.Name)
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+task.spawn(function() -- player ESP loop
+    while alive do
+        if F.PlayerESP then
+            ClearESP(string.char(112,108,97,121,101,114))
+            local hrp = HRP()
+            for _, pl in ipairs(Players:GetPlayers()) do
+                if pl ~= LP and pl.Character and pl.Character:FindFirstChild(string.char(72,101,97,100)) and hrp then
+                    local d = (pl.Character.Head.Position - hrp.Position).Magnitude
+                    if d <= S.ESPDist then
+                        local tn = pl.Team and pl.Team.Name or string.char(63)
+                        local label = pl.Name .. string.char(32,91) .. tn .. string.char(93,32) .. math.floor(d) .. string.char(109)
+                        Tag(string.char(112,108,97,121,101,114), pl.Character, pl.Character.Head, (pl.Team and pl.Team.TeamColor and pl.Team.TeamColor.Color) or C.blue, label)
+                    end
+                end
+            end
+        end
+        task.wait(0.7)
+    end
+end)
+
+task.spawn(function() -- info updater
+    while alive do
+        for _, u in ipairs(updaters) do pcall(u) end
+        task.wait(0.5)
+    end
+end)
+
+------------------------------------------------------------------ SERVER FUNCTIONS
+local function Hop(lowPop)
+    Notify(string.char(46,46,46))
+    local ok, data = pcall(function()
+        local url = ((string.char(104,116,116,112,115,58,47,47,103,97,109,101,115,46,114,111,98,108,111,120,46,99,111,109,47,118,49,47,103,97,109,101,115,47,37,100,47,115,101,114,118,101,114,115,47,80,117,98,108,105,99,63,115,111,114,116,79,114,100,101,114,61,37,115)..string.char(38,108,105,109,105,116,61,49,48,48))):format(game.PlaceId, lowPop and string.char(65,115,99) or string.char(68,101,115,99))
+        return HttpService:JSONDecode(game:HttpGet(url))
+    end)
+    if not ok or not data or not data.data then return Notify(string.char(72,84,84,80,32,101,114,114,111,114)) end
+    for _, s in ipairs(data.data) do
+        if s.id ~= game.JobId and s.playing < s.maxPlayers then
+            TeleportSvc:TeleportToPlaceInstance(game.PlaceId, s.id, LP)
+            return
+        end
+    end
+end
+
+local function Copy(text)
+    if setclipboard then setclipboard(text); Notify(T(string.char(104,95,99,111,112,105,101,100))) else Notify(string.char(69,120,101,99,117,116,111,114,32,104,97,115,32,110,111,32,99,108,105,112,98,111,97,114,100)) end
+end
+
+------------------------------------------------------------------ CLEANUP
+local function Cleanup()
+    alive = false
+    for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
+    StopFly()
+    ClearESP(string.char(112,108,97,121,101,114)); ClearESP(string.char(99,111,105,110)); ClearESP(string.char(100,114,111,112))
+    RestoreLight()
+    pcall(function()
+        local h = Hum(); if h then h.WalkSpeed = 16; h.JumpPower = 50 end
+        workspace.Gravity = 196.2
+        workspace.CurrentCamera.FieldOfView = 70
+    end)
+    if gui then gui:Destroy() end
+end
+if getgenv then getgenv().NNHub_Cleanup = Cleanup end
+
+------------------------------------------------------------------ MAIN WINDOW
+local function BuildMain()
+    local sc
+
+    local mini = New(string.char(84,101,120,116,66,117,116,116,111,110), {
+        Size = UDim2.fromOffset(44, 44), Position = UDim2.new(0, 12, 0.5, -22), BackgroundColor3 = C.bg,
+        Text = string.char(57,57), TextColor3 = C.gold, Font = Enum.Font.SourceSansBold, TextSize = 13, AutoButtonColor = true,
+    }, gui); Round(mini, 22); Stroke(mini)
+
+    window = New(string.char(70,114,97,109,101), {
+        Size = UDim2.fromOffset(640, 390), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
+        BackgroundColor3 = C.bg, BorderSizePixel = 0,
+    }, gui); Round(window, 14); Stroke(window)
+    sc = New(string.char(85,73,83,99,97,108,101), { Scale = S.Scale / 100 }, window)
+    mini.MouseButton1Click:Connect(function() window.Visible = not window.Visible end)
+
+    local top = New(string.char(70,114,97,109,101), { Size = UDim2.new(1, 0, 0, 42), BackgroundColor3 = C.panel, BorderSizePixel = 0 }, window); Round(top, 14)
+    New(string.char(84,101,120,116,76,97,98,101,108), {
+        Size = UDim2.new(0, 150, 1, 0), Position = UDim2.new(0, 14, 0, 0), BackgroundTransparency = 1,
+        Text = CONFIG.Title .. string.char(32) .. CONFIG.Version, TextColor3 = C.gold, Font = Enum.Font.SourceSansBold,
+        TextSize = 19, TextXAlignment = Enum.TextXAlignment.Left,
+    }, top)
+    local search = New(string.char(84,101,120,116,66,111,120), {
+        Size = UDim2.new(0, 220, 0, 28), Position = UDim2.new(0.5, -100, 0.5, -14), BackgroundColor3 = C.item,
+        Text = "", PlaceholderText = T(string.char(115,101,97,114,99,104)), PlaceholderColor3 = C.sub, TextColor3 = C.text,
+        Font = FONT, TextSize = 14, ClearTextOnFocus = false,
+    }, top); Round(search, 8)
+    local function topBtn(txt, x, col)
+        return New(string.char(84,101,120,116,66,117,116,116,111,110), {
+            Size = UDim2.fromOffset(28, 28), Position = UDim2.new(1, x, 0.5, -14), BackgroundColor3 = col,
+            Text = txt, TextColor3 = C.text, Font = Enum.Font.SourceSansBold, TextSize = 16,
+        }, top)
+    end
+    local bClose = topBtn(string.char(88), -36, C.red); Round(bClose, 8)
+    local bMin = topBtn(string.char(45), -70, C.item); Round(bMin, 8)
+    local bLang = topBtn(string.char(65), -104, C.item); Round(bLang, 8)
+    bClose.MouseButton1Click:Connect(Cleanup)
+    bMin.MouseButton1Click:Connect(function() window.Visible = false end)
+
+    local dragging, dStart, dPos
+    top.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+            dragging, dStart, dPos = true, i.Position, window.Position
+        end
+    end)
+    Bind(UIS.InputChanged, function(i)
+        if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+            local d = (i.Position - dStart) / sc.Scale
+            window.Position = UDim2.new(dPos.X.Scale, dPos.X.Offset + d.X, dPos.Y.Scale, dPos.Y.Offset + d.Y)
+        end
+    end)
+    Bind(UIS.InputEnded, function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = false end
+    end)
+
+    local side = New(string.char(83,99,114,111,108,108,105,110,103,70,114,97,109,101), {
+        Size = UDim2.new(0, 150, 1, -52), Position = UDim2.new(0, 8, 0, 48), BackgroundTransparency = 1,
+        BorderSizePixel = 0, ScrollBarThickness = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    }, window)
+    New(string.char(85,73,76,105,115,116,76,97,121,111,117,116), { Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder }, side)
+    content = New(string.char(70,114,97,109,101), { Size = UDim2.new(1, -176, 1, -56), Position = UDim2.new(0, 166, 0, 50), BackgroundTransparency = 1 }, window)
+
+    local ORDER = {
+        { string.char(71,95,77,65,73,78) }, { string.char(72,79,77,69) }, { string.char(70,65,82,77) }, { string.char(67,79,77,66,65,84) },
+        { string.char(71,95,71,65,77,69) }, { string.char(80,76,65,89,69,82) }, { string.char(84,69,76,69,80,79,82,84) }, { string.char(86,73,83,85,65,76,83) }, { string.char(83,69,82,86,69,82) },
+        { string.char(71,95,83,89,83,84,69,77) }, { string.char(75,69,89,83) }, { string.char(83,69,84,84,73,78,71,83) },
+    }
+    for _, e in ipairs(ORDER) do
+        local k = e[1]
+        if k:sub(1, 2) == string.char(71,95) then
+            Txt(side, k, { Size = UDim2.new(1, 0, 0, 20), TextColor3 = C.sub, TextSize = 12 })
+        else
+            local b = New(string.char(84,101,120,116,66,117,116,116,111,110), {
+                Size = UDim2.new(1, 0, 0, 32), BackgroundColor3 = C.item, BackgroundTransparency = 0.5,
+                Text = T(k), TextColor3 = C.text, Font = FONT, TextSize = 15, AutoButtonColor = false,
+            }, side); Round(b, 8)
+            texts[#texts + 1] = { b, k }
+            pageBtns[k] = b
+            b.MouseButton1Click:Connect(function() ShowPage(k) end)
+        end
+    end
+
+    ---------------------------------------------------------------- HOME
+    Page(string.char(72,79,77,69)); building = string.char(72,79,77,69)
+    Header(string.char(104,95,105,110,102,111))
+    Info(function() return T(string.char(104,95,119,101,108,99,111,109,101)) .. string.char(44,32) .. LP.DisplayName end)
+    Info(function() return T(string.char(104,95,112,108,97,110)) .. string.char(58,32) .. PLAN end)
+    Info(function() return string.char(80,105,99,107,117,112,115,58,32) .. coinsCollected end)
+    Info(function() return T(string.char(104,95,102,112,115)) .. string.char(58,32) .. math.floor(fps) end)
+    Info(function()
+        local p = string.char(63)
+        pcall(function() p = math.floor(Stats.Network.ServerStatsItem[string.char(68,97,116,97,32,80,105,110,103)]:GetValue()) end)
+        return T(string.char(104,95,112,105,110,103)) .. string.char(58,32) .. p .. string.char(32,109,115)
+    end)
+    Info(function()
+        local s = math.floor(os.clock() - startT)
+        return T(string.char(104,95,117,112)) .. string.char(58,32) .. string.format(string.char(37,48,50,100,58,37,48,50,100,58,37,48,50,100), math.floor(s / 3600), math.floor((s % 3600) / 60), s % 60)
+    end)
+    Header(string.char(104,95,108,105,110,107,115))
+    Button(string.char(104,95,121,116), function() Copy(CONFIG.Youtube) end)
+    Button(string.char(104,95,100,99), function() Copy(CONFIG.Discord) end)
+    Info(function() return T(string.char(115,116,95,119,97,114,110)) end)
+
+    ---------------------------------------------------------------- FARM
+    Page(string.char(70,65,82,77)); building = string.char(70,65,82,77)
+    Header(string.char(102,95,104,101,97,100))
+    Toggle(string.char(102,95,99,111,105,110), function(v) F.Farm = v end)
+    Slider(string.char(102,95,114,97,110,103,101), string.char(70,97,114,109,82,97,110,103,101), 50, 2000)
+    Slider(string.char(102,95,104,101,105,103,104,116), string.char(70,97,114,109,72,101,105,103,104,116), 1, 20)
+    Slider(string.char(102,95,100,101,108,97,121), string.char(67,108,105,99,107,68,101,108,97,121), 50, 2000)
+    Toggle(string.char(102,95,101,115,112), function(v) F.CoinESP = v; if not v then ClearESP(string.char(99,111,105,110)) end end)
+    local rbox = Input(string.char(102,95,114,97,114,101), string.char(78,97,109,101,46,46,46), S.RareWord)
+    rbox.FocusLost:Connect(function() S.RareWord = rbox.Text end)
+    Toggle(string.char(102,95,110,111,116,105,102,121), function(v) F.CoinNotify = v end)
+    Info(function() return T(string.char(115,116,95,110,97,109,101,115)) end)
+
+    ---------------------------------------------------------------- COMBAT
+    Page(string.char(67,79,77,66,65,84)); building = string.char(67,79,77,66,65,84)
+    Header(string.char(99,95,104,101,97,100))
+    Toggle(string.char(99,95,107,110,105,102,101,101,115,112), function(v) F.DropESP = v; if not v then ClearESP(string.char(100,114,111,112)) end end)
+    Button(string.char(99,95,116,112,107,110,105,102,101), function()
+        local d = NearestDrop()
+        if d then
+            local pos = PartPos(d)
+            if pos then TeleportTo(CFrame.new(pos + Vector3.new(0, 3, 0))) end
+        else Notify(T(string.char(99,95,110,111,110,101))) end
+    end)
+    Info(function() return T(string.char(115,116,95,119,97,114,110)) end)
+
+    ---------------------------------------------------------------- PLAYER
+    Page(string.char(80,76,65,89,69,82)); building = string.char(80,76,65,89,69,82)
+    Header(string.char(112,95,104,101,97,100))
+    Toggle(string.char(112,95,115,112,101,101,100,95,111,110), function(v) F.Speed = v; if not v then local h = Hum(); if h then h.WalkSpeed = 16 end end end)
+    Slider(string.char(112,95,115,112,101,101,100), string.char(83,112,101,101,100), 16, LIM.speed)
+    Toggle(string.char(112,95,106,117,109,112,95,111,110), function(v) F.Jump = v; if not v then local h = Hum(); if h then h.JumpPower = 50 end end end)
+    Slider(string.char(112,95,106,117,109,112), string.char(74,117,109,112), 50, LIM.jump)
+    local setFly = Toggle(string.char(112,95,102,108,121), function(v) F.Fly = v; if not v then StopFly() end end)
+    Slider(string.char(112,95,102,108,121,115,112,101,101,100), string.char(70,108,121,83,112,101,101,100), 20, LIM.fly)
+    local setNoclip = Toggle(string.char(112,95,110,111,99,108,105,112), function(v) F.Noclip = v end)
+    Toggle(string.char(112,95,105,110,102), function(v) F.InfJump = v end)
+    Toggle(string.char(112,95,97,102,107), function(v) F.AFK = v end)
+    Header(string.char(112,95,99,97,109))
+    Toggle(string.char(112,95,102,111,118,95,111,110), function(v) F.FOV = v; if not v then workspace.CurrentCamera.FieldOfView = 70 end end)
+    Slider(string.char(112,95,102,111,118), string.char(70,79,86), 40, 120)
+    Toggle(string.char(112,95,103,114,97,118,95,111,110), function(v) F.Grav = v; if not v then workspace.Gravity = 196.2 end end)
+    Slider(string.char(112,95,103,114,97,118), string.char(71,114,97,118,105,116,121), 20, 300)
+
+    ---------------------------------------------------------------- TELEPORT
+    Page(string.char(84,69,76,69,80,79,82,84)); building = string.char(84,69,76,69,80,79,82,84)
+    Header(string.char(116,95,104,101,97,100))
+    Slider(string.char(116,95,116,119,101,101,110), string.char(84,119,101,101,110,83,112,101,101,100), 100, 600)
+    local pbox = Input(string.char(116,95,112,108,97,121,101,114), string.char(78,97,109,101,46,46,46))
+    Button(string.char(116,95,103,111), function()
+        local q = pbox.Text:lower()
+        if q == "" then return end
+        for _, pl in ipairs(Players:GetPlayers()) do
+            if pl ~= LP and (pl.Name:lower():find(q, 1, true) or pl.DisplayName:lower():find(q, 1, true)) then
+                local r = pl.Character and pl.Character:FindFirstChild(string.char(72,117,109,97,110,111,105,100,82,111,111,116,80,97,114,116))
+                if r then TeleportTo(r.CFrame + Vector3.new(0, 3, 0)) end
+                return
+            end
+        end
+    end)
+    Button(string.char(116,95,99,111,105,110), function()
+        local coin = NearestCoin()
+        if coin then
+            local pos = PartPos(coin)
+            if pos then TeleportTo(CFrame.new(pos + Vector3.new(0, 3, 0))) end
+        end
+    end)
+    Button(string.char(116,95,119,101,97,112,111,110), function()
+        local d = NearestDrop()
+        if d then
+            local pos = PartPos(d)
+            if pos then TeleportTo(CFrame.new(pos + Vector3.new(0, 3, 0))) end
+        else Notify(T(string.char(99,95,110,111,110,101))) end
+    end)
+    Toggle(string.char(116,95,99,108,105,99,107), function(v) F.ClickTP = v end)
+    Header(string.char(116,95,119,112))
+    Info(function()
+        local n = {}
+        for k in pairs(S.Waypoints) do n[#n + 1] = k end
+        table.sort(n)
+        return #n > 0 and table.concat(n, string.char(44,32)) or T(string.char(116,95,110,111,119,112))
+    end)
+    local wbox = Input(string.char(116,95,119,112,95,110,97,109,101), string.char(83,112,97,119,110,32,49))
+    Button(string.char(116,95,119,112,95,115,97,118,101), function()
+        local hrp = HRP()
+        if hrp and wbox.Text ~= "" then
+            local p = hrp.Position
+            S.Waypoints[wbox.Text] = { p.X, p.Y, p.Z }
+            SaveSettings(); Notify(T(string.char(116,95,115,97,118,101,100)))
+        end
+    end)
+    Button(string.char(116,95,119,112,95,103,111), function()
+        local w = S.Waypoints[wbox.Text]
+        if w then TeleportTo(CFrame.new(w[1], w[2], w[3])) end
+    end)
+    Button(string.char(116,95,119,112,95,100,101,108), function() S.Waypoints[wbox.Text] = nil; SaveSettings() end, C.red)
+
+    ---------------------------------------------------------------- VISUALS
+    Page(string.char(86,73,83,85,65,76,83)); building = string.char(86,73,83,85,65,76,83)
+    Header(string.char(118,95,104,101,97,100))
+    Toggle(string.char(118,95,101,115,112), function(v) F.PlayerESP = v; if not v then ClearESP(string.char(112,108,97,121,101,114)) end end)
+    Slider(string.char(118,95,100,105,115,116), string.char(69,83,80,68,105,115,116), 100, 5000)
+    Toggle(string.char(118,95,102,117,108,108), function(v) F.Full = v; if not v then RestoreLight() end end)
+    Toggle(string.char(118,95,102,111,103), function(v) F.Fog = v; if not v then Lighting.FogEnd = origLight.FogEnd end end)
+    Button(string.char(118,95,102,112,115), function()
+        Lighting.GlobalShadows = false
+        pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
+        local n = 0
+        for _, d in ipairs(workspace:GetDescendants()) do
+            if d:IsA(string.char(80,97,114,116,105,99,108,101,69,109,105,116,116,101,114)) or d:IsA(string.char(84,114,97,105,108)) then d.Enabled = false
+            elseif d:IsA(string.char(68,101,99,97,108)) or d:IsA(string.char(84,101,120,116,117,114,101)) then d.Transparency = 1 end
+            n = n + 1; if n % 400 == 0 then task.wait() end
+        end
+    end)
+
+    ---------------------------------------------------------------- SERVER
+    Page(string.char(83,69,82,86,69,82)); building = string.char(83,69,82,86,69,82)
+    Header(string.char(115,95,104,101,97,100))
+    Info(function() return T(string.char(115,95,112,108,97,121,101,114,115)) .. string.char(58,32) .. #Players:GetPlayers() .. string.char(32,47,32) .. Players.MaxPlayers end)
+    Button(string.char(115,95,114,101,106,111,105,110), function() TeleportSvc:TeleportToPlaceInstance(game.PlaceId, game.JobId, LP) end)
+    Button(string.char(115,95,104,111,112), function() Hop(false) end)
+    Button(string.char(115,95,108,111,119,104,111,112), function() Hop(true) end)
+    Button(string.char(115,95,99,111,112,121), function() Copy(game.JobId) end)
+    local jbox = Input(string.char(115,95,106,111,105,110,95,105,110), string.char(74,111,98,73,100,46,46,46))
+    Button(string.char(115,95,106,111,105,110), function()
+        if jbox.Text ~= "" then TeleportSvc:TeleportToPlaceInstance(game.PlaceId, jbox.Text, LP) end
+    end)
+
+    ---------------------------------------------------------------- KEYBINDS
+    Page(string.char(75,69,89,83)); building = string.char(75,69,89,83)
+    local actions = {}
+    actions.Menu   = Keybind(string.char(107,98,95,109,101,110,117), string.char(77,101,110,117), function() window.Visible = not window.Visible end)
+    actions.Fly    = Keybind(string.char(107,98,95,102,108,121), string.char(70,108,121), function() setFly(not F.Fly) end)
+    actions.Noclip = Keybind(string.char(107,98,95,110,111,99,108,105,112), string.char(78,111,99,108,105,112), function() setNoclip(not F.Noclip) end)
+    actions.Panic  = Keybind(string.char(107,98,95,112,97,110,105,99), string.char(80,97,110,105,99), Cleanup)
+
+    Bind(UIS.InputBegan, function(i, gp)
+        if i.UserInputType ~= Enum.UserInputType.Keyboard then return end
+        if rebinding then
+            local fn = rebinding; rebinding = nil
+            fn(i.KeyCode.Name)
+            return
+        end
+        if gp then return end
+        for id, fn in pairs(actions) do
+            if S.Keys[id] == i.KeyCode.Name then fn() end
+        end
+    end)
+
+    ---------------------------------------------------------------- SETTINGS
+    Page(string.char(83,69,84,84,73,78,71,83)); building = string.char(83,69,84,84,73,78,71,83)
+    Button(string.char(115,116,95,108,97,110,103), function()
+        S.Lang = (S.Lang == string.char(69,78)) and string.char(65,82) or string.char(69,78)
+        RefreshTexts(); search.PlaceholderText = T(string.char(115,101,97,114,99,104))
+    end)
+    Slider(string.char(115,116,95,115,99,97,108,101), string.char(83,99,97,108,101), 50, 150, function(v) sc.Scale = v / 100 end)
+    Button(string.char(115,116,95,115,97,118,101), function() SaveSettings(); Notify(T(string.char(115,116,95,115,97,118,101,100))) end)
+    Button(string.char(115,116,95,114,101,115,101,116), function()
+        pcall(function() if delfile and isfile(CONFIG.SettingsFile) then delfile(CONFIG.SettingsFile) end end)
+        Notify(string.char(79,75))
+    end, C.red)
+    Info(function() return T(string.char(115,116,95,99,114,101,100,105,116,115)) end)
+
+    bLang.MouseButton1Click:Connect(function()
+        S.Lang = (S.Lang == string.char(69,78)) and string.char(65,82) or string.char(69,78)
+        RefreshTexts(); search.PlaceholderText = T(string.char(115,101,97,114,99,104))
+    end)
+
+    ---------------------------------------------------------------- SEARCH
+    search:GetPropertyChangedSignal(string.char(84,101,120,116)):Connect(function()
+        local q = search.Text:lower()
+        local first
+        for _, r in ipairs(rows) do
+            local hit = q == "" or T(r.key):lower():find(q, 1, true) or (L.EN[r.key] or ""):lower():find(q, 1, true)
+            r.f.Visible = hit and true or false
+            if hit and q ~= "" and not first and not r.header then first = r.page end
+        end
+        if first then ShowPage(first) end
+    end)
+
+    ShowPage(string.char(72,79,77,69))
+end
+
+------------------------------------------------------------------ KEY SCREEN + LOADING
+local function Loading(done)
+    local f = New(string.char(70,114,97,109,101), {
+        Size = UDim2.fromOffset(380, 130), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
+        BackgroundColor3 = C.bg, BorderSizePixel = 0,
+    }, gui); Round(f, 14); Stroke(f)
+    New(string.char(84,101,120,116,76,97,98,101,108), {
+        Size = UDim2.new(1, 0, 0, 36), Position = UDim2.new(0, 0, 0, 12), BackgroundTransparency = 1,
+        Text = CONFIG.Title .. string.char(32) .. CONFIG.Version, TextColor3 = C.gold, Font = Enum.Font.SourceSansBold, TextSize = 24,
+    }, f)
+    local msg = Txt(f, string.char(108,100,49), { Size = UDim2.new(1, 0, 0, 24), Position = UDim2.new(0, 0, 0, 56), TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.sub })
+    local bar = New(string.char(70,114,97,109,101), { Size = UDim2.new(1, -40, 0, 8), Position = UDim2.new(0, 20, 0, 94), BackgroundColor3 = C.off, BorderSizePixel = 0 }, f); Round(bar, 4)
+    local fill = New(string.char(70,114,97,109,101), { Size = UDim2.new(0, 0, 1, 0), BackgroundColor3 = C.accent, BorderSizePixel = 0 }, bar); Round(fill, 4)
+    task.spawn(function()
+        for idx, k in ipairs({ string.char(108,100,49), string.char(108,100,50), string.char(108,100,51) }) do
+            msg.Text = T(k)
+            TweenService:Create(fill, TweenInfo.new(0.5), { Size = UDim2.new(idx / 3, 0, 1, 0) }):Play()
+            task.wait(0.55)
+        end
+        f:Destroy()
+        done()
+    end)
+end
+
+local function KeyScreen(onOk)
+    local f = New(string.char(70,114,97,109,101), {
+        Size = UDim2.fromOffset(400, 290), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
+        BackgroundColor3 = C.bg, BorderSizePixel = 0,
+    }, gui); Round(f, 14); Stroke(f)
+    Txt(f, string.char(107,95,116,105,116,108,101), { Size = UDim2.new(1, 0, 0, 40), Position = UDim2.new(0, 0, 0, 14), TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.gold, TextSize = 24, Font = Enum.Font.SourceSansBold })
+    Txt(f, string.char(107,95,115,117,98), { Size = UDim2.new(1, 0, 0, 22), Position = UDim2.new(0, 0, 0, 52), TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = C.sub })
+    local lb = New(string.char(84,101,120,116,66,117,116,116,111,110), {
+        Size = UDim2.fromOffset(30, 26), Position = UDim2.new(1, -40, 0, 10), BackgroundColor3 = C.item,
+        Text = string.char(65), TextColor3 = C.text, Font = FONT, TextSize = 15,
+    }, f); Round(lb, 6)
+    lb.MouseButton1Click:Connect(function() S.Lang = (S.Lang == string.char(69,78)) and string.char(65,82) or string.char(69,78); RefreshTexts() end)
+
+    local plan = string.char(70,114,101,101)
+    local bFree = Txt(f, string.char(107,95,102,114,101,101), { Size = UDim2.new(0.5, -28, 0, 34), Position = UDim2.new(0, 20, 0, 86), BackgroundTransparency = 0, TextXAlignment = Enum.TextXAlignment.Center }, string.char(84,101,120,116,66,117,116,116,111,110))
+    local bPaid = Txt(f, string.char(107,95,112,97,105,100), { Size = UDim2.new(0.5, -28, 0, 34), Position = UDim2.new(0.5, 8, 0, 86), BackgroundTransparency = 0, TextXAlignment = Enum.TextXAlignment.Center }, string.char(84,101,120,116,66,117,116,116,111,110))
+    Round(bFree, 8); Round(bPaid, 8)
+    local function paint()
+        bFree.BackgroundColor3 = plan == string.char(70,114,101,101) and C.accent or C.item
+        bPaid.BackgroundColor3 = plan == string.char(80,97,105,100) and C.accent or C.item
+    end
+    bFree.MouseButton1Click:Connect(function() plan = string.char(70,114,101,101); paint() end)
+    bPaid.MouseButton1Click:Connect(function() plan = string.char(80,97,105,100); paint() end)
+    paint()
+
+    local box = New(string.char(84,101,120,116,66,111,120), {
+        Size = UDim2.new(1, -40, 0, 38), Position = UDim2.new(0, 20, 0, 136), BackgroundColor3 = C.item,
+        Text = "", PlaceholderText = T(string.char(107,95,112,104)), PlaceholderColor3 = C.sub, TextColor3 = C.text,
+        Font = FONT, TextSize = 16, ClearTextOnFocus = false,
+    }, f); Round(box, 8)
+    local status = New(string.char(84,101,120,116,76,97,98,101,108), {
+        Size = UDim2.new(1, 0, 0, 20), Position = UDim2.new(0, 0, 0, 180), BackgroundTransparency = 1,
+        Text = "", TextColor3 = C.red, Font = FONT, TextSize = 14,
+    }, f)
+    local go = Txt(f, string.char(107,95,98,116,110), { Size = UDim2.new(1, -40, 0, 40), Position = UDim2.new(0, 20, 0, 208), BackgroundColor3 = C.accent, BackgroundTransparency = 0, TextXAlignment = Enum.TextXAlignment.Center, Font = Enum.Font.SourceSansBold, TextSize = 17 }, string.char(84,101,120,116,66,117,116,116,111,110))
+    Round(go, 8)
+    New(string.char(84,101,120,116,76,97,98,101,108), {
+        Size = UDim2.new(1, 0, 0, 22), Position = UDim2.new(0, 0, 1, -28), BackgroundTransparency = 1,
+        Text = CONFIG.Youtube, TextColor3 = C.sub, Font = FONT, TextSize = 13,
+    }, f)
+
+    go.MouseButton1Click:Connect(function()
+        local k = box.Text:gsub(string.char(37,115,43), "")
+        if CONFIG.Keys[k] and CONFIG.Keys[k] == plan then
+            status.TextColor3 = C.green; status.Text = T(string.char(107,95,111,107))
+            pcall(function() if writefile then writefile(CONFIG.SessionFile, HttpService:JSONEncode({ key = k, plan = plan })) end end)
+            task.wait(0.4); f:Destroy(); onOk(plan)
+        else
+            status.TextColor3 = C.red; status.Text = T(string.char(107,95,98,97,100))
+        end
+    end)
+end
+
+local function LoadSession()
+    local ok, s = pcall(function()
+        if isfile and isfile(CONFIG.SessionFile) then return HttpService:JSONDecode(readfile(CONFIG.SessionFile)) end
+    end)
+    if ok and s and CONFIG.Keys[s.key] and CONFIG.Keys[s.key] == s.plan then return s end
+end
+
+------------------------------------------------------------------ START
+LoadSettings()
+gui = New(string.char(83,99,114,101,101,110,71,117,105), { Name = string.char(78,78,72,117,98), ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 999 })
+gui.Parent = GuiParent()
+
+local function Start(plan)
+    PLAN = plan
+    LIM = CONFIG.Limits[plan] or CONFIG.Limits.Free
+    Loading(BuildMain)
+end
+
+local sess = LoadSession()
+if not CONFIG.RequireKey then Start(string.char(80,97,105,100))
+elseif sess then Start(sess.plan)
+else KeyScreen(Start) end
