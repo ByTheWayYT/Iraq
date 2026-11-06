@@ -906,6 +906,88 @@ function Net.who(e, force)
 	local b = BADGE_SET[tostring(e.b or "")] and (tostring(e.b) .. " ") or ""
 	return string.format('%s<font color="%s"><b>[%s]</b></font> <font color="%s"><b>%s</b></font>', b, RANK_HEX[r], r, nc, U.esc(u))
 end
+-- ---------- DEVELOPER ANNOUNCEMENT: big card in the CENTER of every player's screen ----------
+Net.annQ, Net.annBusy = {}, false
+function Net.banner(text)
+	text = tostring(text or ""):gsub("%c", " "):gsub("^%s+", ""):gsub("%s+$", "")
+	text = text:sub(1, 200)
+	if #text < 1 then return end
+	if #Net.annQ >= 6 then table.remove(Net.annQ, 1) end
+	Net.annQ[#Net.annQ + 1] = text
+	if Net.annBusy then return end
+	Net.annBusy = true
+	task.spawn(function()
+		if not Net.annGui then
+			Net.annGui = U.mkGui("BTW_Announce")
+			Net.annGui.DisplayOrder = 100
+		end
+		while alive and #Net.annQ > 0 do
+			local msg = table.remove(Net.annQ, 1)
+			local card = U.new("Frame", {Size = UDim2.new(0, 480, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Position = UDim2.new(0.5, 0, 0.5, 0),
+				AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = C.bg, BackgroundTransparency = 1, BorderSizePixel = 0}, Net.annGui)
+			U.round(card, 18)
+			local fit = U.fit(480, 220)
+			local sc = U.new("UIScale", {Scale = fit * 0.85}, card)
+			local stroke = U.new("UIStroke", {Thickness = 3, Color = C.gold, Transparency = 1}, card)
+			U.new("UIPadding", {PaddingTop = UDim.new(0, 16), PaddingBottom = UDim.new(0, 18), PaddingLeft = UDim.new(0, 20), PaddingRight = UDim.new(0, 20)}, card)
+			U.new("UIListLayout", {Padding = UDim.new(0, 10), HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder}, card)
+			local head = U.new("TextLabel", {Size = UDim2.new(1, 0, 0, 26), BackgroundTransparency = 1, Text = L("📢 إعلان من المطورين", "📢 Announcement from the developers"),
+				TextColor3 = C.gold, Font = Enum.Font.GothamBlack, TextSize = 18, TextTransparency = 1, LayoutOrder = 1}, card)
+			local line = U.new("Frame", {Size = UDim2.new(0.6, 0, 0, 2), BackgroundColor3 = C.gold, BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = 2}, card)
+			local body = U.new("TextLabel", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, Text = msg,
+				TextColor3 = C.white, Font = Enum.Font.GothamBold, TextSize = 20, TextWrapped = true, TextTransparency = 1, LayoutOrder = 3}, card)
+			local close = U.new("TextButton", {Size = UDim2.new(0, 120, 0, 28), BackgroundColor3 = C.row, Text = L("حسناً ✓", "OK ✓"), TextColor3 = C.white,
+				Font = Enum.Font.GothamBold, TextSize = 13, BackgroundTransparency = 1, TextTransparency = 1, LayoutOrder = 4}, card)
+			U.round(close, 8)
+			local skip = false
+			close.MouseButton1Click:Connect(function() skip = true end)
+			local function fade(vis, dur)
+				local ti = TweenInfo.new(dur, Enum.EasingStyle.Quad)
+				local o = vis and 0 or 1
+				TweenService:Create(card, ti, {BackgroundTransparency = vis and 0.05 or 1}):Play()
+				TweenService:Create(stroke, ti, {Transparency = o}):Play()
+				TweenService:Create(line, ti, {BackgroundTransparency = o}):Play()
+				TweenService:Create(head, ti, {TextTransparency = o}):Play()
+				TweenService:Create(body, ti, {TextTransparency = o}):Play()
+				TweenService:Create(close, ti, {BackgroundTransparency = o, TextTransparency = o}):Play()
+			end
+			fade(true, 0.3)
+			TweenService:Create(sc, TweenInfo.new(0.35, Enum.EasingStyle.Back), {Scale = fit}):Play()
+			local hold = math.clamp(4 + #msg * 0.07, 6, 15)
+			local t0 = os.clock()
+			while alive and not skip and os.clock() - t0 < hold do task.wait(0.1) end
+			fade(false, 0.3)
+			TweenService:Create(sc, TweenInfo.new(0.3), {Scale = fit * 0.92}):Play()
+			task.wait(0.35)
+			card:Destroy()
+		end
+		Net.annBusy = false
+	end)
+end
+-- developers only: publish to Firebase, CHECK the result (the old code never did), then show it on this screen too
+function Net.announce(text)
+	if not CONFIG.Developers[LP.Name] then U.notify(L("🔒 للمطورين فقط", "🔒 Developers only")) return false end
+	text = tostring(text or ""):gsub("%c", " "):gsub("^%s+", ""):gsub("%s+$", "")
+	text = text:sub(1, 200)
+	if #text < 3 then U.notify(L("الإعلان قصير", "Too short")) return false end
+	local b = Net.base()
+	if not b then U.notify(L("ضع BackendURL أولاً", "Set BackendURL first")) return false end
+	if not ((syn and syn.request) or http_request or request or (http and http.request)) then
+		U.notify(L("❌ المنفذ ما يدعم طلبات HTTP", "❌ Your executor has no HTTP request function"))
+		return false
+	end
+	local body = httpReq({Url = b .. "/news.json", Method = "POST", Headers = {["Content-Type"] = "application/json"},
+		Body = HttpService:JSONEncode({k = "imp", u = LP.Name, m = text, r = "DEV", lv = levelOf(S.XP), t = {[".sv"] = "timestamp"}})})
+	if not body then
+		U.notify(L("❌ فشل النشر: قاعدة Firebase ترفض الكتابة على news (راجع Rules)", "❌ Publish failed: Firebase rejected the write to news (check Rules)"))
+		return false
+	end
+	local ok, d = pcall(function() return HttpService:JSONDecode(body) end)
+	if ok and type(d) == "table" and d.name then Net.newsSeen[tostring(d.name)] = true end
+	Net.banner(text)
+	U.notify(L("✅ تم النشر - يظهر لكل اللاعبين خلال ~4 ثواني", "✅ Published - everyone sees it within ~4 seconds"))
+	return true
+end
 -- broadcast an event to everyone using the script
 function U.broadcast(entry)
 	if not Net.base() then return end
@@ -918,7 +1000,7 @@ local function fmtNews(e)
 	elseif e.k == "score" then return "🏆 " .. w .. L(" حقق رقم قياسي في ", " set a record in ") .. U.esc(tostring(e.g):sub(1, 12)) .. ": " .. U.esc(tostring(e.s):sub(1, 6)), "score"
 	elseif e.k == "daily7" then return "👑 " .. w .. L(" أكمل مكافآت الـ 7 أيام!", " completed the 7-day rewards!"), "lvl"
 	-- developer announcements: show ONLY the message (no name, no rank, no badge)
-	elseif e.k == "imp" and CONFIG.Developers[tostring(e.u)] then return "📢 " .. U.esc(tostring(e.m):sub(1, 200)), "imp" end
+	end -- "imp" announcements are shown by Net.banner (center of the screen)
 	return nil
 end
 function Net.send(text)
@@ -967,7 +1049,7 @@ task.spawn(function()
 					Net.chatInit = true Net.ok = true
 				else Net.ok = false end
 			end
-			if tick % 10 == 0 or tick == 2 then
+			if tick % 4 == 0 or tick == 2 then
 				local d = Net.get("news", Q_NEWS)
 				if d then
 					local nowMs = os.time() * 1000
@@ -977,7 +1059,8 @@ task.spawn(function()
 							local fresh = type(e.t) == "number" and (nowMs - e.t) < 300000
 							local mine = e.u == LP.Name and e.k ~= "imp"
 							if (Net.newsInit or fresh) and not mine then
-								local txt, kind = fmtNews(e)
+								if e.k == "imp" and CONFIG.Developers[tostring(e.u)] then Net.banner(tostring(e.m)) end
+									local txt, kind = fmtNews(e)
 								if txt then U.push(txt, kind) end
 							end
 						end
@@ -2218,9 +2301,10 @@ buildMenu = function()
 			local t = tostring(ab.Text):gsub("^%s+", ""):gsub("%s+$", "")
 			if #t < 3 then U.notify(L("الإعلان قصير", "Too short")) return end
 			if not Net.base() then U.notify(L("ضع BackendURL أولاً", "Set BackendURL first")) return end
-			U.broadcast({k = "imp", u = LP.Name, m = t:sub(1, 200), r = "DEV", b = S.Badge, nc = S.NameCol, lv = levelOf(S.XP)})
-			ab.Text = "" U.notify(L("تم النشر 📢 (يظهر للجميع خلال ثواني)", "Published 📢 (shows for everyone in a few seconds)"))
+			local sent = Net.announce(t)
+			if sent then ab.Text = "" end
 		end, "نشر", "Publish")
+		button("معاينة الإعلان (لك فقط)", "Preview (only you)", function() Net.banner(ab.Text) end, "معاينة", "Preview")
 		button("مسح الشات العام", "Clear global chat", function()
 			if Net.delete("chat") then Net.chat = {} Net.chatSeen = {} Net.lastKey = nil Net.ver = Net.ver + 1 U.notify(L("تم المسح", "Cleared"))
 			else U.notify(L("فشل المسح (تحقق من صلاحيات القاعدة)", "Clear failed (check database rules)")) end
