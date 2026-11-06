@@ -65,7 +65,43 @@ local UI = { gui = nil, frame = nil, mconns = {}, dyn = {}, page = "HOME" }
 local cleanup, buildMenu, rebuildMenu, showKeySystem
 local origZoom = {LP.CameraMaxZoomDistance, LP.CameraMinZoomDistance}
 
-local function L(ar, en) return (S.Lang == "EN") and en or ar end
+-- ---------- languages ----------
+-- To add a language: add it to LANGS, then add a TR table keyed by the ENGLISH text used in L(ar, en).
+-- Any text missing from a TR table falls back to English.
+local LANGS = {{"EN", "English"}, {"AR", "العربية"}, {"ES", "Español"}, {"FR", "Français"}}
+local TR = {
+	ES = {
+		["Home"] = "Inicio", ["Gifts"] = "Regalos", ["Shop"] = "Tienda", ["Quests"] = "Misiones", ["Achievements"] = "Logros",
+		["Player"] = "Jugador", ["Fly"] = "Volar", ["Teleport"] = "Teletransporte", ["Shaders"] = "Shaders", ["Screen"] = "Pantalla",
+		["Tools"] = "Herramientas", ["Music"] = "Música", ["Arcade"] = "Arcade", ["Global chat"] = "Chat global", ["Server"] = "Servidor",
+		["Keybinds"] = "Atajos", ["Key"] = "Clave", ["Settings"] = "Ajustes", ["Feedback"] = "Opiniones", ["Developers"] = "Desarrolladores",
+		["Loading modules..."] = "Cargando módulos...", ["Reading settings..."] = "Leyendo ajustes...", ["Preparing interface..."] = "Preparando interfaz...",
+		["Ready ✅"] = "Listo ✅", ["Choose your plan, then enter the key"] = "Elige tu plan e introduce la clave",
+		["Activate 7T Mod Menu V1"] = "Activar 7T Mod Menu V1", ["Type your key here..."] = "Escribe tu clave aquí...",
+		["✅ Verify / Renew"] = "✅ Verificar / Renovar", ["Language"] = "Idioma", ["Select"] = "Elegir", ["Copied ✅"] = "Copiado ✅",
+		["Search features..."] = "Buscar funciones...", ["🔍 Search features..."] = "🔍 Buscar funciones...", ["Save"] = "Guardar",
+	},
+	FR = {
+		["Home"] = "Accueil", ["Gifts"] = "Cadeaux", ["Shop"] = "Boutique", ["Quests"] = "Quêtes", ["Achievements"] = "Succès",
+		["Player"] = "Joueur", ["Fly"] = "Voler", ["Teleport"] = "Téléportation", ["Shaders"] = "Shaders", ["Screen"] = "Écran",
+		["Tools"] = "Outils", ["Music"] = "Musique", ["Arcade"] = "Arcade", ["Global chat"] = "Chat global", ["Server"] = "Serveur",
+		["Keybinds"] = "Raccourcis", ["Key"] = "Clé", ["Settings"] = "Réglages", ["Feedback"] = "Avis", ["Developers"] = "Développeurs",
+		["Loading modules..."] = "Chargement des modules...", ["Reading settings..."] = "Lecture des réglages...", ["Preparing interface..."] = "Préparation de l'interface...",
+		["Ready ✅"] = "Prêt ✅", ["Choose your plan, then enter the key"] = "Choisis ton offre puis entre la clé",
+		["Activate 7T Mod Menu V1"] = "Activer 7T Mod Menu V1", ["Type your key here..."] = "Entre ta clé ici...",
+		["✅ Verify / Renew"] = "✅ Vérifier / Renouveler", ["Language"] = "Langue", ["Select"] = "Choisir", ["Copied ✅"] = "Copié ✅",
+		["🔍 Search features..."] = "🔍 Chercher une fonction...", ["Save"] = "Sauvegarder",
+	},
+}
+local function L(ar, en)
+	local l = S.Lang
+	if l == "AR" then return ar end
+	if l ~= "EN" then
+		local t = TR[l]
+		if t and t[en] then return t[en] end
+	end
+	return en
+end
 
 -- ---------- utilities ----------
 U.queue = {}
@@ -133,7 +169,7 @@ end
 -- ---------- state / defaults ----------
 local function defaults()
 	return {
-		Lang = "AR", Theme = 1, UIScale = (UIS.TouchEnabled and 0.85 or 1),
+		Lang = "EN", LangSet = false, Theme = 1, UIScale = (UIS.TouchEnabled and 0.85 or 1),
 		XP = 0, Use = {}, Hi = {}, FbLog = {}, LastDay = "", LastFb = 0,
 		Playlist = {{name = "Track 1", id = "9046835519"}}, PlIndex = 1,
 		Speed = 16, Jump = 50, FlySpeed = 50, FOV = 70, Gravity = 196.2, SpinSpeed = 20,
@@ -150,7 +186,7 @@ local function defaults()
 end
 S = defaults()
 
-local PERSIST = {"XP", "Use", "Hi", "FbLog", "LastDay", "LastFb", "Playlist", "PlIndex", "Theme", "Lang", "UIScale", "Quests", "QDay", "Mins", "Plays", "Keys", "Profiles",
+local PERSIST = {"XP", "Use", "Hi", "FbLog", "LastDay", "LastFb", "Playlist", "PlIndex", "Theme", "Lang", "LangSet", "UIScale", "Quests", "QDay", "Mins", "Plays", "Keys", "Profiles",
 	"LastGift", "GiftCount", "Streak", "Waypoints", "Ach", "Coins", "Owned", "Badge", "NameCol", "BoostUntil", "DailyDay", "DailyLast", "Cycles", "Notes"}
 local SAVED = {"Speed", "SpeedOn", "Jump", "JumpOn", "FlySpeed", "FOV", "FOVOn", "Gravity", "GravityOn", "SpinSpeed",
 	"InfJump", "AntiAFK", "ESP", "ESPName", "ESPDist", "ESPHealth", "ESPRainbow", "ESPTeam", "ESPMaxDist", "ESPColor",
@@ -184,6 +220,11 @@ local function loadSettings()
 			if type(v) == "table" and v.c == true and v.r then S[k] = Color3.fromRGB(v.r, v.g, v.b) else S[k] = v end
 		end
 	end
+	-- old saves (before the language picker existed) already have a language: don't ask again
+	if data.Lang and data.LangSet == nil then S.LangSet = true end
+	local validLang = false
+	for _, lg in ipairs(LANGS) do if lg[1] == S.Lang then validLang = true end end
+	if not validLang then S.Lang = "EN" end
 	if type(S.Playlist) ~= "table" or #S.Playlist == 0 then S.Playlist = {{name = "Track 1", id = "9046835519"}} end
 	if type(S.Use) ~= "table" then S.Use = {} end
 	if type(S.Hi) ~= "table" then S.Hi = {} end
@@ -475,7 +516,7 @@ Fx.Aura = function(on)
 end
 
 function E.reset()
-	local keep = {Lang = S.Lang, Theme = S.Theme, UIScale = S.UIScale, XP = S.XP, Use = S.Use, Hi = S.Hi, FbLog = S.FbLog,
+	local keep = {Lang = S.Lang, LangSet = S.LangSet, Theme = S.Theme, UIScale = S.UIScale, XP = S.XP, Use = S.Use, Hi = S.Hi, FbLog = S.FbLog,
 		LastDay = S.LastDay, LastFb = S.LastFb, Playlist = S.Playlist, PlIndex = S.PlIndex,
 		Quests = S.Quests, QUsed = S.QUsed, QDay = S.QDay, Mins = S.Mins, Plays = S.Plays, Keys = S.Keys, Profiles = S.Profiles,
 		LastGift = S.LastGift, GiftCount = S.GiftCount, Streak = S.Streak, Waypoints = S.Waypoints, Ach = S.Ach,
@@ -876,7 +917,8 @@ local function fmtNews(e)
 	if e.k == "lvl" then return "🎉 " .. w .. L(" وصل المستوى ", " reached level ") .. U.esc(tostring(e.lv):sub(1, 3)), "lvl"
 	elseif e.k == "score" then return "🏆 " .. w .. L(" حقق رقم قياسي في ", " set a record in ") .. U.esc(tostring(e.g):sub(1, 12)) .. ": " .. U.esc(tostring(e.s):sub(1, 6)), "score"
 	elseif e.k == "daily7" then return "👑 " .. w .. L(" أكمل مكافآت الـ 7 أيام!", " completed the 7-day rewards!"), "lvl"
-	elseif e.k == "imp" and CONFIG.Developers[tostring(e.u)] then return "📢 " .. w .. ": " .. U.esc(tostring(e.m):sub(1, 200)), "imp" end
+	-- developer announcements: show ONLY the message (no name, no rank, no badge)
+	elseif e.k == "imp" and CONFIG.Developers[tostring(e.u)] then return "📢 " .. U.esc(tostring(e.m):sub(1, 200)), "imp" end
 	return nil
 end
 function Net.send(text)
@@ -1036,8 +1078,8 @@ function Daily.open()
 		AutoButtonColor = false, BorderSizePixel = 0}, g)
 	dim.MouseButton1Click:Connect(function() Daily.close() end)
 	local W, H = 520, 352
-	local card = U.new("Frame", {Size = UDim2.new(0, W, 0, H), Position = UDim2.new(0.5, -W / 2, 0.5, -H / 2), BackgroundColor3 = Color3.new(1, 1, 1), Active = true,
-		ClipsDescendants = true}, g)
+	local card = U.new("Frame", {Size = UDim2.new(0, W, 0, H), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
+		BackgroundColor3 = Color3.new(1, 1, 1), Active = true, ClipsDescendants = true}, g)
 	U.round(card, 20)
 	U.new("UIGradient", {Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(40, 17, 24), Color3.fromRGB(14, 7, 10))}, card)
 	U.new("UIStroke", {Thickness = 2.5, Color = C.accent}, card)
@@ -1168,8 +1210,9 @@ buildMenu = function()
 	U.round(gdot, 7)
 	UI.dyn[#UI.dyn + 1] = function() gdot.Visible = Gift.left() == 0 or Daily.can() end
 
-	local main = U.new("Frame", {Size = UDim2.new(0, 700, 0, 400), Position = UDim2.new(0.5, -350, 0.5, -200), BackgroundColor3 = Color3.new(1, 1, 1),
-		BackgroundTransparency = 0.03, Active = true, ClipsDescendants = true}, gui)
+	-- main window: anchored at its center so it stays in the middle of the screen at any UIScale
+	local main = U.new("Frame", {Size = UDim2.new(0, 700, 0, 400), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
+		BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 0.03, Active = true, ClipsDescendants = true}, gui)
 	UI.frame = main
 	U.round(main, 18)
 	U.new("UIGradient", {Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(34, 16, 21), Color3.fromRGB(14, 7, 10))}, main)
@@ -1197,12 +1240,17 @@ buildMenu = function()
 			TextColor3 = C.white, Font = Enum.Font.GothamBold, TextSize = 12}, top)
 		U.round(b, 8) return b
 	end
-	local langBtn = topBtn(S.Lang == "AR" and "EN" or "عربي", -118, 40, Color3.fromRGB(60, 50, 90))
+	local langBtn = topBtn("🌐 " .. S.Lang, -128, 50, Color3.fromRGB(60, 50, 90))
 	local minBtn = topBtn("–", -72, 30, Color3.fromRGB(70, 70, 70))
 	local closeBtn = topBtn("X", -38, 30, Color3.fromRGB(235, 50, 50))
 	minBtn.MouseButton1Click:Connect(function() main.Visible = false end)
 	closeBtn.MouseButton1Click:Connect(function() cleanup() end)
-	langBtn.MouseButton1Click:Connect(function() S.Lang = (S.Lang == "AR") and "EN" or "AR" U.dirty = true rebuildMenu() end)
+	-- cycles through every language in LANGS
+	langBtn.MouseButton1Click:Connect(function()
+		local idx = 1
+		for i, lg in ipairs(LANGS) do if lg[1] == S.Lang then idx = i end end
+		S.Lang = LANGS[idx % #LANGS + 1][1] S.LangSet = true U.queue = {} U.dirty = true rebuildMenu()
+	end)
 
 	-- status bar
 	local status = U.new("TextLabel", {Size = UDim2.new(1, -24, 0, 22), Position = UDim2.new(0, 12, 1, -26), BackgroundColor3 = Color3.fromRGB(30, 16, 18), Text = "",
@@ -2059,6 +2107,17 @@ buildMenu = function()
 
 	-- ================= SETTINGS =================
 	P.SETTINGS = function()
+		sec("اللغة", "Language")
+		info(function()
+			local name = S.Lang
+			for _, lg in ipairs(LANGS) do if lg[1] == S.Lang then name = lg[2] end end
+			return L("اللغة الحالية: ", "Current language: ") .. name
+		end)
+		for _, lg in ipairs(LANGS) do
+			button(lg[2], lg[2], function()
+				S.Lang = lg[1] S.LangSet = true U.queue = {} U.dirty = true rebuildMenu()
+			end, "اختيار", "Select")
+		end
 		sec("الثيم", "Theme")
 		swatches("لون الواجهة", "UI color", themes, function(_, i) applyTheme(i) end)
 		sec("عام", "General")
@@ -2154,7 +2213,7 @@ buildMenu = function()
 		sec("إعلان لكل اللاعبين (شريط الأخبار)", "Announce to everyone (ticker)")
 		local ab = input("نص الإعلان", "Announcement", "", function() end)
 		ab.Text = "" ab.PlaceholderText = L("اكتب الإعلان...", "Type announcement...")
-		info(function() return L("يظهر للجميع باسمك ورتبتك [DEV] بالأصفر", "Everyone sees it with your name & yellow [DEV] rank") end)
+		info(function() return L("يظهر للجميع كإعلان بدون اسمك أو رتبتك", "Shown to everyone as a plain announcement (no name or rank)") end)
 		button("نشر الإعلان", "Publish announcement", function()
 			local t = tostring(ab.Text):gsub("^%s+", ""):gsub("%s+$", "")
 			if #t < 3 then U.notify(L("الإعلان قصير", "Too short")) return end
@@ -2321,7 +2380,9 @@ function Games.open(name)
 	local sid = Games.sid
 	local titles = {snake = "🐍 Snake", ttt = "❌⭕ Tic-Tac-Toe", g2048 = "2048", pong = "🏓 Pong", flappy = "🐤 Flappy", memory = "🧠 Memory", breakout = "🧱 Breakout", tapr = "🎯 Tap Rush"}
 	gameGui = U.mkGui("BTW_Game")
-	local win = U.new("Frame", {Size = UDim2.new(0, 340, 0, 500), Position = UDim2.new(0.5, -170, 0.5, -250), BackgroundColor3 = C.bg, Active = true}, gameGui)
+	-- game window: anchored at its center so it always opens in the middle of the screen
+	local win = U.new("Frame", {Size = UDim2.new(0, 340, 0, 500), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
+		BackgroundColor3 = C.bg, Active = true}, gameGui)
 	U.round(win, 16) U.new("UIStroke", {Thickness = 2.5, Color = C.accent}, win)
 	U.new("UIScale", {Scale = U.fit(340, 500)}, win)
 	local bar = U.new("Frame", {Size = UDim2.new(1, 0, 0, 40), BackgroundColor3 = Color3.fromRGB(30, 16, 18)}, win)
@@ -2742,8 +2803,10 @@ end
 local function dimGui(g)
 	return U.new("Frame", {Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = 0.4, BorderSizePixel = 0}, g)
 end
+-- centered card (anchored at its center so UIScale never pushes it off-center)
 local function cardFrame(g, w, h)
-	local f = U.new("Frame", {Size = UDim2.new(0, w, 0, h), Position = UDim2.new(0.5, -w / 2, 0.5, -h / 2), BackgroundColor3 = Color3.new(1, 1, 1), Active = true}, g)
+	local f = U.new("Frame", {Size = UDim2.new(0, w, 0, h), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
+		BackgroundColor3 = Color3.new(1, 1, 1), Active = true}, g)
 	U.round(f, 20)
 	U.new("UIGradient", {Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(40, 17, 24), Color3.fromRGB(14, 7, 10))}, f)
 	U.new("UIStroke", {Thickness = 2.5, Color = C.accent}, f)
@@ -2840,6 +2903,30 @@ showKeySystem = function(onUnlocked, expired)
 	end)
 end
 
+-- first-run language picker (shown BEFORE the loading screen and the key window)
+local function showLangPicker(onDone)
+	C.accent = themes[S.Theme] or themes[1]
+	local g = U.mkGui("BTW_Lang")
+	dimGui(g)
+	local h = 120 + #LANGS * 46
+	local f = cardFrame(g, 340, h)
+	U.new("TextLabel", {Size = UDim2.new(1, 0, 0, 30), Position = UDim2.new(0, 0, 0, 14), BackgroundTransparency = 1, Text = "🌐 Language / اللغة",
+		TextColor3 = C.gold, Font = Enum.Font.GothamBold, TextSize = 20}, f)
+	U.new("TextLabel", {Size = UDim2.new(1, -40, 0, 20), Position = UDim2.new(0, 20, 0, 46), BackgroundTransparency = 1, Text = "Choose your language / اختر لغتك",
+		TextColor3 = Color3.fromRGB(190, 170, 170), Font = Enum.Font.Gotham, TextSize = 12}, f)
+	for i, lg in ipairs(LANGS) do
+		local b = U.new("TextButton", {Size = UDim2.new(1, -40, 0, 38), Position = UDim2.new(0, 20, 0, 78 + (i - 1) * 46), BackgroundColor3 = C.row, Text = lg[2],
+			TextColor3 = C.white, Font = Enum.Font.GothamBold, TextSize = 15}, f)
+		U.round(b, 10)
+		U.new("UIStroke", {Thickness = 1.2, Color = Color3.fromRGB(90, 60, 64)}, b)
+		b.MouseButton1Click:Connect(function()
+			S.Lang = lg[1] S.LangSet = true U.dirty = true saveSettings()
+			g:Destroy()
+			if onDone then onDone() end
+		end)
+	end
+end
+
 -- ======================= TICKER + START =======================
 task.spawn(function()
 	local tick = 0
@@ -2934,6 +3021,10 @@ local function afterUnlock()
 		U.notify(L("أهلاً! المتبقي: ", "Welcome! Left: ") .. U.fmtTime(session.expires - os.time()))
 	end
 end
-runLoadingBar(function()
-	if sessionValid() then afterUnlock() else showKeySystem(afterUnlock, session.type ~= nil) end
-end)
+local function startFlow()
+	runLoadingBar(function()
+		if sessionValid() then afterUnlock() else showKeySystem(afterUnlock, session.type ~= nil) end
+	end)
+end
+-- first run: language picker first, then loading screen, key window and menu
+if S.LangSet then startFlow() else showLangPicker(startFlow) end
